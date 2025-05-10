@@ -46,7 +46,7 @@ importers:
         specifier: ^3
         version: 3.3.1
       '@tailwindcss/postcss':
-        specifier: ^4
+        specifier: ^4.1.6
         version: 4.1.6
       '@types/node':
         specifier: ^20
@@ -64,7 +64,7 @@ importers:
         specifier: 15.3.2
         version: 15.3.2(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3)
       tailwindcss:
-        specifier: ^4
+        specifier: ^4.1.6
         version: 4.1.6
       tw-animate-css:
         specifier: ^1.2.9
