@@ -6,16 +6,26 @@ export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, apiKey } = await req.json();
+    const { prompt, apiKey, model = "gpt-4o", temperature = 1, maxTokens = 512 } = await req.json();
     if (!prompt || !apiKey) {
       return new Response(JSON.stringify({ error: "Missing prompt or API key" }), { status: 400 });
     }
     const result = await streamText({
-      model: openai("gpt-4o", { apiKey }),
+      model: openai(model, { apiKey }),
       prompt,
+      temperature,
+      maxTokens,
     });
     return result.toAIStreamResponse();
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message || "Internal error" }), { status: 500 });
+    let message = "Internal error";
+    if (err?.message?.includes("401") || err?.message?.toLowerCase().includes("key")) {
+      message = "Invalid or unauthorized OpenAI API key.";
+    } else if (err?.message?.includes("429")) {
+      message = "You are being rate limited by OpenAI. Try again later.";
+    } else if (err?.message) {
+      message = err.message;
+    }
+    return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
 }
