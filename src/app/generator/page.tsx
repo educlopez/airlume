@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@clerk/nextjs";
+import { supabase } from "@/lib/supabaseClient";
 
 const MODELS = [
   { label: "GPT-4o (latest, fast)", value: "gpt-4o" },
@@ -20,8 +22,46 @@ export default function GeneratorPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  // Advanced options
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [presencePenalty, setPresencePenalty] = useState(0);
+  const [frequencyPenalty, setFrequencyPenalty] = useState(0);
+  const [topP, setTopP] = useState(1);
+  const { user } = useUser();
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   const isFormValid = prompt.trim() && apiKey.trim();
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    try {
+      const prefs = JSON.parse(localStorage.getItem("generatorPrefs") || "{}") || {};
+      if (prefs.model) setModel(prefs.model);
+      if (prefs.temperature !== undefined) setTemperature(prefs.temperature);
+      if (prefs.maxTokens !== undefined) setMaxTokens(prefs.maxTokens);
+      if (prefs.systemPrompt !== undefined) setSystemPrompt(prefs.systemPrompt);
+      if (prefs.presencePenalty !== undefined) setPresencePenalty(prefs.presencePenalty);
+      if (prefs.frequencyPenalty !== undefined) setFrequencyPenalty(prefs.frequencyPenalty);
+      if (prefs.topP !== undefined) setTopP(prefs.topP);
+      if (prefs.showAdvanced !== undefined) setShowAdvanced(prefs.showAdvanced);
+    } catch {}
+  }, []);
+
+  // Save preferences to localStorage when they change (except apiKey, prompt, response, error, loading, copied)
+  useEffect(() => {
+    const prefs = {
+      model,
+      temperature,
+      maxTokens,
+      systemPrompt,
+      presencePenalty,
+      frequencyPenalty,
+      topP,
+      showAdvanced,
+    };
+    localStorage.setItem("generatorPrefs", JSON.stringify(prefs));
+  }, [model, temperature, maxTokens, systemPrompt, presencePenalty, frequencyPenalty, topP, showAdvanced]);
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +73,17 @@ export default function GeneratorPage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, apiKey, model, temperature, maxTokens }),
+        body: JSON.stringify({
+          prompt,
+          apiKey,
+          model,
+          temperature,
+          maxTokens,
+          systemPrompt,
+          presencePenalty,
+          frequencyPenalty,
+          topP,
+        }),
       });
       if (!res.body) throw new Error("No response body");
       const reader = res.body.getReader();
@@ -58,6 +108,30 @@ export default function GeneratorPage() {
     navigator.clipboard.writeText(response);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  async function handleSave() {
+    setSaveStatus(null);
+    try {
+      const { error } = await supabase.from("generations").insert([
+        {
+          user_id: user?.id,
+          prompt,
+          model,
+          temperature,
+          max_tokens: maxTokens,
+          system_prompt: systemPrompt,
+          presence_penalty: presencePenalty,
+          frequency_penalty: frequencyPenalty,
+          top_p: topP,
+          response,
+        },
+      ]);
+      if (error) throw error;
+      setSaveStatus("Saved!");
+    } catch (err: any) {
+      setSaveStatus(err.message || "Failed to save");
+    }
   }
 
   return (
@@ -144,6 +218,75 @@ export default function GeneratorPage() {
             />
           </div>
         </div>
+        {/* Advanced options toggle */}
+        <div>
+          <Button
+            type="button"
+            variant="outline"
+            className="text-xs"
+            onClick={() => setShowAdvanced((v) => !v)}
+          >
+            {showAdvanced ? "Hide" : "Show"} Advanced Options
+          </Button>
+        </div>
+        {showAdvanced && (
+          <div className="space-y-4 border rounded p-4 bg-gray-50 mt-2">
+            <div>
+              <label className="block font-medium mb-1">System Prompt</label>
+              <input
+                type="text"
+                className="w-full border rounded p-2"
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                placeholder="e.g. You are a helpful assistant."
+              />
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block font-medium mb-1">Presence Penalty
+                  <span className="ml-1 text-xs text-gray-400">({presencePenalty})</span>
+                </label>
+                <input
+                  type="range"
+                  min={-2}
+                  max={2}
+                  step={0.1}
+                  value={presencePenalty}
+                  onChange={(e) => setPresencePenalty(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block font-medium mb-1">Frequency Penalty
+                  <span className="ml-1 text-xs text-gray-400">({frequencyPenalty})</span>
+                </label>
+                <input
+                  type="range"
+                  min={-2}
+                  max={2}
+                  step={0.1}
+                  value={frequencyPenalty}
+                  onChange={(e) => setFrequencyPenalty(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Top-p
+                <span className="ml-1 text-xs text-gray-400">({topP})</span>
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={topP}
+                onChange={(e) => setTopP(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          </div>
+        )}
         <Button type="submit" disabled={!isFormValid || loading} className="w-full flex items-center justify-center">
           {loading && <span className="animate-spin mr-2">⏳</span>}
           {loading ? "Generating..." : "Generate"}
@@ -153,13 +296,21 @@ export default function GeneratorPage() {
       <div className="mt-8">
         <div className="flex items-center justify-between mb-2">
           <span className="font-semibold">Response</span>
-          <Button type="button" variant="outline" size="sm" onClick={handleCopy} disabled={!response}>
-            {copied ? "Copied!" : "Copy"}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={handleCopy} disabled={!response}>
+              {copied ? "Copied!" : "Copy"}
+            </Button>
+            {user && response && (
+              <Button type="button" variant="outline" size="sm" onClick={handleSave}>
+                Save
+              </Button>
+            )}
+          </div>
         </div>
         <div className="whitespace-pre-wrap bg-gray-100 rounded p-4 min-h-[100px] border">
           {response || <span className="text-gray-400">The generated content will appear here.</span>}
         </div>
+        {saveStatus && <div className="mt-2 text-sm text-green-600">{saveStatus}</div>}
       </div>
     </div>
   );
