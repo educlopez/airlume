@@ -1,52 +1,56 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useUser } from "@clerk/nextjs";
-import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState } from "react"
+import { useUser } from "@clerk/nextjs"
+
+import { supabase } from "@/lib/supabaseClient"
+import { Button } from "@/components/ui/button"
 
 const MODELS = [
   { label: "GPT-4o (latest, fast)", value: "gpt-4o" },
   { label: "GPT-4 Turbo", value: "gpt-4-turbo" },
   { label: "GPT-3.5 Turbo (cheap)", value: "gpt-3.5-turbo" },
-];
+]
 
 export default function GeneratorPage() {
-  const [prompt, setPrompt] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [showKey, setShowKey] = useState(false);
-  const [model, setModel] = useState(MODELS[0].value);
-  const [temperature, setTemperature] = useState(1);
-  const [maxTokens, setMaxTokens] = useState(512);
-  const [response, setResponse] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [prompt, setPrompt] = useState("")
+  const [apiKey, setApiKey] = useState("")
+  const [showKey, setShowKey] = useState(false)
+  const [model, setModel] = useState(MODELS[0].value)
+  const [temperature, setTemperature] = useState(1)
+  const [maxTokens, setMaxTokens] = useState(512)
+  const [response, setResponse] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [copied, setCopied] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   // Advanced options
-  const [systemPrompt, setSystemPrompt] = useState("");
-  const [presencePenalty, setPresencePenalty] = useState(0);
-  const [frequencyPenalty, setFrequencyPenalty] = useState(0);
-  const [topP, setTopP] = useState(1);
-  const { user } = useUser();
-  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [systemPrompt, setSystemPrompt] = useState("")
+  const [presencePenalty, setPresencePenalty] = useState(0)
+  const [frequencyPenalty, setFrequencyPenalty] = useState(0)
+  const [topP, setTopP] = useState(1)
+  const { user } = useUser()
+  const [saveStatus, setSaveStatus] = useState<string | null>(null)
 
-  const isFormValid = prompt.trim() && apiKey.trim();
+  const isFormValid = prompt.trim() && apiKey.trim()
 
   // Load preferences from localStorage on mount
   useEffect(() => {
     try {
-      const prefs = JSON.parse(localStorage.getItem("generatorPrefs") || "{}") || {};
-      if (prefs.model) setModel(prefs.model);
-      if (prefs.temperature !== undefined) setTemperature(prefs.temperature);
-      if (prefs.maxTokens !== undefined) setMaxTokens(prefs.maxTokens);
-      if (prefs.systemPrompt !== undefined) setSystemPrompt(prefs.systemPrompt);
-      if (prefs.presencePenalty !== undefined) setPresencePenalty(prefs.presencePenalty);
-      if (prefs.frequencyPenalty !== undefined) setFrequencyPenalty(prefs.frequencyPenalty);
-      if (prefs.topP !== undefined) setTopP(prefs.topP);
-      if (prefs.showAdvanced !== undefined) setShowAdvanced(prefs.showAdvanced);
+      const prefs =
+        JSON.parse(localStorage.getItem("generatorPrefs") || "{}") || {}
+      if (prefs.model) setModel(prefs.model)
+      if (prefs.temperature !== undefined) setTemperature(prefs.temperature)
+      if (prefs.maxTokens !== undefined) setMaxTokens(prefs.maxTokens)
+      if (prefs.systemPrompt !== undefined) setSystemPrompt(prefs.systemPrompt)
+      if (prefs.presencePenalty !== undefined)
+        setPresencePenalty(prefs.presencePenalty)
+      if (prefs.frequencyPenalty !== undefined)
+        setFrequencyPenalty(prefs.frequencyPenalty)
+      if (prefs.topP !== undefined) setTopP(prefs.topP)
+      if (prefs.showAdvanced !== undefined) setShowAdvanced(prefs.showAdvanced)
     } catch {}
-  }, []);
+  }, [])
 
   // Save preferences to localStorage when they change (except apiKey, prompt, response, error, loading, copied)
   useEffect(() => {
@@ -59,9 +63,18 @@ export default function GeneratorPage() {
       frequencyPenalty,
       topP,
       showAdvanced,
-    };
-    localStorage.setItem("generatorPrefs", JSON.stringify(prefs));
-  }, [model, temperature, maxTokens, systemPrompt, presencePenalty, frequencyPenalty, topP, showAdvanced]);
+    }
+    localStorage.setItem("generatorPrefs", JSON.stringify(prefs))
+  }, [
+    model,
+    temperature,
+    maxTokens,
+    systemPrompt,
+    presencePenalty,
+    frequencyPenalty,
+    topP,
+    showAdvanced,
+  ])
 
   function isErrorWithMessage(err: unknown): err is { message: string } {
     return (
@@ -69,15 +82,15 @@ export default function GeneratorPage() {
       err !== null &&
       "message" in err &&
       typeof (err as { message?: unknown }).message === "string"
-    );
+    )
   }
 
   async function handleGenerate(e: React.FormEvent) {
-    e.preventDefault();
-    setResponse("");
-    setError("");
-    setLoading(true);
-    setCopied(false);
+    e.preventDefault()
+    setResponse("")
+    setError("")
+    setLoading(true)
+    setCopied(false)
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -93,38 +106,38 @@ export default function GeneratorPage() {
           frequencyPenalty,
           topP,
         }),
-      });
-      if (!res.body) throw new Error("No response body");
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
+      })
+      if (!res.body) throw new Error("No response body")
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let done = false
       while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
+        const { value, done: doneReading } = await reader.read()
+        done = doneReading
         if (value) {
-          const chunk = decoder.decode(value);
-          setResponse((prev) => prev + chunk);
+          const chunk = decoder.decode(value)
+          setResponse((prev) => prev + chunk)
         }
       }
     } catch (err: unknown) {
       if (isErrorWithMessage(err)) {
-        setError(err.message);
+        setError(err.message)
       } else {
-        setError("Something went wrong");
+        setError("Something went wrong")
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   function handleCopy() {
-    navigator.clipboard.writeText(response);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    navigator.clipboard.writeText(response)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   async function handleSave() {
-    setSaveStatus(null);
+    setSaveStatus(null)
     try {
       const { error } = await supabase.from("generations").insert([
         {
@@ -139,26 +152,28 @@ export default function GeneratorPage() {
           top_p: topP,
           response,
         },
-      ]);
-      if (error) throw error;
-      setSaveStatus("Saved!");
+      ])
+      if (error) throw error
+      setSaveStatus("Saved!")
     } catch (err: unknown) {
       if (isErrorWithMessage(err)) {
-        setSaveStatus(err.message);
+        setSaveStatus(err.message)
       } else {
-        setSaveStatus("Failed to save");
+        setSaveStatus("Failed to save")
       }
     }
   }
 
   return (
-    <div className="max-w-xl mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6">Content Generator</h1>
-      <form onSubmit={handleGenerate} className="space-y-6 bg-white rounded shadow p-6">
+    <div className="p-6">
+      <h1 className="mb-6 text-2xl font-bold">Content Generator</h1>
+      <form onSubmit={handleGenerate} className="space-y-6">
         <div>
-          <label className="block font-medium mb-1">Prompt <span className="text-red-500">*</span></label>
+          <label className="mb-1 block font-medium">
+            Prompt <span className="text-red-500">*</span>
+          </label>
           <textarea
-            className="w-full border rounded p-2 min-h-[80px] focus:outline-none focus:ring focus:border-blue-400"
+            className="min-h-[80px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             required
@@ -166,22 +181,29 @@ export default function GeneratorPage() {
           />
         </div>
         <div>
-          <label className="block font-medium mb-1">OpenAI API Key <span className="text-red-500">*</span></label>
+          <label className="mb-1 block font-medium">
+            OpenAI API Key <span className="text-red-500">*</span>
+          </label>
           <div className="flex items-center gap-2">
             <input
               type={showKey ? "text" : "password"}
-              className="w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-400"
+              className="w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               required
               placeholder="sk-..."
               autoComplete="off"
             />
-            <Button type="button" variant="outline" onClick={() => setShowKey((v) => !v)} tabIndex={-1}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowKey((v) => !v)}
+              tabIndex={-1}
+            >
               {showKey ? "Hide" : "Show"}
             </Button>
           </div>
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="mt-1 text-xs text-gray-500">
             <span>Your key is never stored. </span>
             <a
               href="https://platform.openai.com/api-keys"
@@ -194,21 +216,26 @@ export default function GeneratorPage() {
           </div>
         </div>
         <div>
-          <label className="block font-medium mb-1">Model</label>
+          <label className="mb-1 block font-medium">Model</label>
           <select
-            className="w-full border rounded p-2 focus:outline-none focus:ring focus:border-blue-400"
+            className="w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
             value={model}
             onChange={(e) => setModel(e.target.value)}
           >
             {MODELS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
             ))}
           </select>
         </div>
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block font-medium mb-1">Temperature
-              <span className="ml-1 text-xs text-gray-400">({temperature})</span>
+            <label className="mb-1 block font-medium">
+              Temperature
+              <span className="ml-1 text-xs text-gray-400">
+                ({temperature})
+              </span>
             </label>
             <input
               type="range"
@@ -221,7 +248,8 @@ export default function GeneratorPage() {
             />
           </div>
           <div className="flex-1">
-            <label className="block font-medium mb-1">Max Tokens
+            <label className="mb-1 block font-medium">
+              Max Tokens
               <span className="ml-1 text-xs text-gray-400">({maxTokens})</span>
             </label>
             <input
@@ -247,12 +275,12 @@ export default function GeneratorPage() {
           </Button>
         </div>
         {showAdvanced && (
-          <div className="space-y-4 border rounded p-4 bg-gray-50 mt-2">
+          <div className="mt-2 space-y-4 rounded border bg-gray-50 p-4">
             <div>
-              <label className="block font-medium mb-1">System Prompt</label>
+              <label className="mb-1 block font-medium">System Prompt</label>
               <input
                 type="text"
-                className="w-full border rounded p-2"
+                className="w-full rounded border p-2"
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
                 placeholder="e.g. You are a helpful assistant."
@@ -260,8 +288,11 @@ export default function GeneratorPage() {
             </div>
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="block font-medium mb-1">Presence Penalty
-                  <span className="ml-1 text-xs text-gray-400">({presencePenalty})</span>
+                <label className="mb-1 block font-medium">
+                  Presence Penalty
+                  <span className="ml-1 text-xs text-gray-400">
+                    ({presencePenalty})
+                  </span>
                 </label>
                 <input
                   type="range"
@@ -274,8 +305,11 @@ export default function GeneratorPage() {
                 />
               </div>
               <div className="flex-1">
-                <label className="block font-medium mb-1">Frequency Penalty
-                  <span className="ml-1 text-xs text-gray-400">({frequencyPenalty})</span>
+                <label className="mb-1 block font-medium">
+                  Frequency Penalty
+                  <span className="ml-1 text-xs text-gray-400">
+                    ({frequencyPenalty})
+                  </span>
                 </label>
                 <input
                   type="range"
@@ -289,7 +323,8 @@ export default function GeneratorPage() {
               </div>
             </div>
             <div>
-              <label className="block font-medium mb-1">Top-p
+              <label className="mb-1 block font-medium">
+                Top-p
                 <span className="ml-1 text-xs text-gray-400">({topP})</span>
               </label>
               <input
@@ -304,31 +339,52 @@ export default function GeneratorPage() {
             </div>
           </div>
         )}
-        <Button type="submit" disabled={!isFormValid || loading} className="w-full flex items-center justify-center">
-          {loading && <span className="animate-spin mr-2">⏳</span>}
+        <Button
+          type="submit"
+          disabled={!isFormValid || loading}
+          className="flex w-full items-center justify-center"
+        >
+          {loading && <span className="mr-2 animate-spin">⏳</span>}
           {loading ? "Generating..." : "Generate"}
         </Button>
-        {error && <div className="text-red-500 mt-2 text-sm">{error}</div>}
+        {error && <div className="mt-2 text-sm text-red-500">{error}</div>}
       </form>
       <div className="mt-8">
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <span className="font-semibold">Response</span>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={handleCopy} disabled={!response}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              disabled={!response}
+            >
               {copied ? "Copied!" : "Copy"}
             </Button>
             {user && response && (
-              <Button type="button" variant="outline" size="sm" onClick={handleSave}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSave}
+              >
                 Save
               </Button>
             )}
           </div>
         </div>
-        <div className="whitespace-pre-wrap bg-gray-100 rounded p-4 min-h-[100px] border">
-          {response || <span className="text-gray-400">The generated content will appear here.</span>}
+        <div className="min-h-[100px] rounded border bg-gray-100 p-4 whitespace-pre-wrap">
+          {response || (
+            <span className="text-gray-400">
+              The generated content will appear here.
+            </span>
+          )}
         </div>
-        {saveStatus && <div className="mt-2 text-sm text-green-600">{saveStatus}</div>}
+        {saveStatus && (
+          <div className="mt-2 text-sm text-green-600">{saveStatus}</div>
+        )}
       </div>
     </div>
-  );
+  )
 }
