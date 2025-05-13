@@ -10,6 +10,7 @@ const MODELS = [
   { label: "GPT-4o (latest, fast)", value: "gpt-4o" },
   { label: "GPT-4 Turbo", value: "gpt-4-turbo" },
   { label: "GPT-3.5 Turbo (cheap)", value: "gpt-3.5-turbo" },
+  { label: "GPT-4.1 Nano (cheapest)", value: "gpt-4.1-nano-2025-04-14" },
 ]
 
 export default function GeneratorPage() {
@@ -31,8 +32,9 @@ export default function GeneratorPage() {
   const [topP, setTopP] = useState(1)
   const { user } = useUser()
   const [saveStatus, setSaveStatus] = useState<string | null>(null)
+  const [isLocalApiKey, setIsLocalApiKey] = useState(false)
 
-  const isFormValid = prompt.trim() && apiKey.trim()
+  const isFormValid = prompt.trim() && (isLocalApiKey || apiKey.trim())
 
   // Load preferences from localStorage on mount
   useEffect(() => {
@@ -76,6 +78,24 @@ export default function GeneratorPage() {
     showAdvanced,
   ])
 
+  useEffect(() => {
+    // Detect if running in development and the env key is set (via a custom endpoint)
+    async function checkLocalApiKey() {
+      if (typeof window !== "undefined") {
+        try {
+          const res = await fetch("/api/generate", {
+            method: "OPTIONS",
+          })
+          const data = await res.json()
+          setIsLocalApiKey(Boolean(data.hasLocalApiKey))
+        } catch {
+          setIsLocalApiKey(false)
+        }
+      }
+    }
+    checkLocalApiKey()
+  }, [])
+
   function isErrorWithMessage(err: unknown): err is { message: string } {
     return (
       typeof err === "object" &&
@@ -116,7 +136,23 @@ export default function GeneratorPage() {
         done = doneReading
         if (value) {
           const chunk = decoder.decode(value)
-          setResponse((prev) => prev + chunk)
+          // Vercel AI SDK data stream protocol: lines like 0:"text"
+          // Only append lines starting with 0:
+          const lines = chunk.split("\n")
+          let textChunk = ""
+          for (const line of lines) {
+            if (line.startsWith("0:")) {
+              // Remove 0: and parse the JSON string
+              try {
+                const text = JSON.parse(line.slice(2))
+                textChunk += text
+              } catch {
+                // Fallback: just append the raw string
+                textChunk += line.slice(2)
+              }
+            }
+          }
+          setResponse((prev) => prev + textChunk)
         }
       }
     } catch (err: unknown) {
@@ -180,41 +216,43 @@ export default function GeneratorPage() {
             placeholder="Describe what you want to generate..."
           />
         </div>
-        <div>
-          <label className="mb-1 block font-medium">
-            OpenAI API Key <span className="text-red-500">*</span>
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type={showKey ? "text" : "password"}
-              className="w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              required
-              placeholder="sk-..."
-              autoComplete="off"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowKey((v) => !v)}
-              tabIndex={-1}
-            >
-              {showKey ? "Hide" : "Show"}
-            </Button>
+        {!isLocalApiKey && (
+          <div>
+            <label className="mb-1 block font-medium">
+              OpenAI API Key <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type={showKey ? "text" : "password"}
+                className="w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                required
+                placeholder="sk-..."
+                autoComplete="off"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowKey((v) => !v)}
+                tabIndex={-1}
+              >
+                {showKey ? "Hide" : "Show"}
+              </Button>
+            </div>
+            <div className="mt-1 text-xs text-gray-500">
+              <span>Your key is never stored. </span>
+              <a
+                href="https://platform.openai.com/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600"
+              >
+                Where do I get this?
+              </a>
+            </div>
           </div>
-          <div className="mt-1 text-xs text-gray-500">
-            <span>Your key is never stored. </span>
-            <a
-              href="https://platform.openai.com/api-keys"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-blue-600"
-            >
-              Where do I get this?
-            </a>
-          </div>
-        </div>
+        )}
         <div>
           <label className="mb-1 block font-medium">Model</label>
           <select
