@@ -63,6 +63,15 @@ export default function GeneratorPage() {
     localStorage.setItem("generatorPrefs", JSON.stringify(prefs));
   }, [model, temperature, maxTokens, systemPrompt, presencePenalty, frequencyPenalty, topP, showAdvanced]);
 
+  function isErrorWithMessage(err: unknown): err is { message: string } {
+    return (
+      typeof err === "object" &&
+      err !== null &&
+      "message" in err &&
+      typeof (err as { message?: unknown }).message === "string"
+    );
+  }
+
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
     setResponse("");
@@ -97,8 +106,12 @@ export default function GeneratorPage() {
           setResponse((prev) => prev + chunk);
         }
       }
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      if (isErrorWithMessage(err)) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
@@ -129,8 +142,12 @@ export default function GeneratorPage() {
       ]);
       if (error) throw error;
       setSaveStatus("Saved!");
-    } catch (err: any) {
-      setSaveStatus(err.message || "Failed to save");
+    } catch (err: unknown) {
+      if (isErrorWithMessage(err)) {
+        setSaveStatus(err.message);
+      } else {
+        setSaveStatus("Failed to save");
+      }
     }
   }
 

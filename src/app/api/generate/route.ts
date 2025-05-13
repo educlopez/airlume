@@ -4,6 +4,15 @@ import { openai } from "@ai-sdk/openai";
 
 export const runtime = "edge";
 
+function isErrorWithMessage(err: unknown): err is { message: string } {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "message" in err &&
+    typeof (err as { message?: unknown }).message === "string"
+  );
+}
+
 export async function POST(req: NextRequest) {
   try {
     const {
@@ -31,14 +40,17 @@ export async function POST(req: NextRequest) {
       topP,
     });
     return result.toDataStreamResponse();
-  } catch (err: any) {
+  } catch (err: unknown) {
     let message = "Internal error";
-    if (err?.message?.includes("401") || err?.message?.toLowerCase().includes("key")) {
-      message = "Invalid or unauthorized OpenAI API key.";
-    } else if (err?.message?.includes("429")) {
-      message = "You are being rate limited by OpenAI. Try again later.";
-    } else if (err?.message) {
-      message = err.message;
+    if (isErrorWithMessage(err)) {
+      const errMsg = err.message;
+      if (errMsg.includes("401") || errMsg.toLowerCase().includes("key")) {
+        message = "Invalid or unauthorized OpenAI API key.";
+      } else if (errMsg.includes("429")) {
+        message = "You are being rate limited by OpenAI. Try again later.";
+      } else {
+        message = errMsg;
+      }
     }
     return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
