@@ -4,14 +4,6 @@ import { createServerSupabaseClient } from "@/lib/supabaseClient"
 
 export async function saveGeneration({
   userId,
-  prompt,
-  model,
-  temperature,
-  maxTokens,
-  systemPrompt,
-  presencePenalty,
-  frequencyPenalty,
-  topP,
   response,
   imageFile, // File | undefined
 }: {

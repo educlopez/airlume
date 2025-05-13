@@ -148,8 +148,12 @@ export default function GeneratorForm({ userId }: { userId: string }) {
           imageFile: imageFile || undefined,
         })
         setSaveStatus("Saved!")
-      } catch (err: any) {
-        setSaveStatus(err.message || "Failed to save")
+      } catch (err: unknown) {
+        if (isErrorWithMessage(err)) {
+          setSaveStatus(err.message)
+        } else {
+          setSaveStatus("Failed to save")
+        }
       }
     })
   }

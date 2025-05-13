@@ -20,16 +20,6 @@ import {
 
 import { Separator } from "./ui/separator"
 
-const data = {
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: Database,
-    },
-  ],
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useUser()
   const username = user?.username || ""
@@ -44,6 +34,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Generator",
       url: `/${username}/generator`,
       icon: NotebookPen,
+    },
+  ]
+  const navDocuments = [
+    {
+      title: "Posts",
+      url: `/${username}/posts`,
+      icon: Database,
     },
   ]
 
@@ -65,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavDocuments items={data.documents} />
+        <NavDocuments items={navDocuments} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { createOpenAI, openai } from "@ai-sdk/openai"
+import { createOpenAI } from "@ai-sdk/openai"
 import { streamText } from "ai"
 
 export const runtime = "edge"
