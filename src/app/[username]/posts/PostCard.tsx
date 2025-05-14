@@ -25,7 +25,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { updateGeneration } from "../generator/actions"
+import {
+  deleteGeneration,
+  duplicateGeneration,
+  updateGeneration,
+} from "../generator/actions"
 
 type Generation = {
   id: string
@@ -96,11 +100,25 @@ export function PostCard({
             <DropdownMenuItem>
               <Send className="mr-2 size-4" /> Publish Now
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={async () => {
+                await duplicateGeneration({
+                  id: generation.id,
+                  user_id: user.id,
+                })
+                window.location.reload()
+              }}
+            >
               <Copy className="mr-2 size-4" /> Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={async () => {
+                await deleteGeneration(generation.id)
+                window.location.reload()
+              }}
+            >
               <Trash2 className="mr-2 size-4" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

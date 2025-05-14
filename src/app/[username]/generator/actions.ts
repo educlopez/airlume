@@ -76,3 +76,32 @@ export async function deleteGeneration(id: string) {
   if (error) throw error
   return { success: true }
 }
+
+export async function duplicateGeneration({
+  id,
+  user_id,
+}: {
+  id: string
+  user_id: string
+}) {
+  const supabase = createServerSupabaseClient()
+  // Get the original generation
+  const { data: original, error: fetchError } = await supabase
+    .from("generations")
+    .select("response, image_url")
+    .eq("id", id)
+    .single()
+  if (fetchError || !original) throw fetchError || new Error("Not found")
+  // Insert a new generation with the same data, new id, new created_at, status draft
+  const { error: insertError } = await supabase.from("generations").insert([
+    {
+      user_id,
+      response: original.response,
+      image_url: original.image_url,
+      created_at: new Date().toISOString(),
+      status: "draft",
+    },
+  ])
+  if (insertError) throw insertError
+  return { success: true }
+}
