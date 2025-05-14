@@ -12,7 +12,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -135,11 +134,11 @@ export function PostCard({
                 <Pencil className="mr-1 size-4" /> Edit
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-full max-w-2xl p-8">
+            <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
               <DialogHeader>
                 <DialogTitle>Edit Draft</DialogTitle>
               </DialogHeader>
-              <DialogDescription className="mt-4 flex w-full flex-col gap-6 md:flex-row">
+              <div className="mt-4 flex w-full flex-col gap-6 md:flex-row">
                 <div className="flex flex-1 flex-col gap-4">
                   <div className="mb-2 flex items-center gap-2">
                     <Avatar>
@@ -233,7 +232,7 @@ export function PostCard({
                     ) : null}
                   </div>
                 </div>
-              </DialogDescription>
+              </div>
               <DialogFooter className="mt-6">
                 <DialogClose asChild>
                   <Button variant="outline" disabled={saving}>
