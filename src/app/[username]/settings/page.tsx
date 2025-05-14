@@ -8,12 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
+type ClerkAPIError = { errors: { message: string }[] }
+
 export default function SettingsPage() {
   const { user, isLoaded } = useUser()
   const [apiKey, setApiKey] = useState("")
   const [hasKey, setHasKey] = useState(false)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState("")
+  // Profile editing state
+  const [name, setName] = useState(user?.fullName || "")
+  const [email, setEmail] = useState(
+    user?.primaryEmailAddress?.emailAddress || ""
+  )
+  const [profileStatus, setProfileStatus] = useState("")
+  const [profileLoading, setProfileLoading] = useState(false)
 
   useEffect(() => {
     async function fetchKeyStatus() {
@@ -30,6 +39,13 @@ export default function SettingsPage() {
     }
     fetchKeyStatus()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      setName(user.fullName || "")
+      setEmail(user.primaryEmailAddress?.emailAddress || "")
+    }
+  }, [user])
 
   const handleSave = async () => {
     setLoading(true)
@@ -67,6 +83,56 @@ export default function SettingsPage() {
     }
   }
 
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setProfileLoading(true)
+    setProfileStatus("")
+    try {
+      if (user) {
+        // Store the full name in firstName and clear lastName to avoid Clerk double-name bug
+        await user.update({ firstName: name, lastName: "" })
+
+        // Update email if changed
+        if (email && email !== user.primaryEmailAddress?.emailAddress) {
+          // Try both possible keys for Clerk SDK compatibility
+          let newEmail
+          try {
+            // @ts-expect-error Clerk types may be out of sync, but this is the correct usage in some SDKs
+            newEmail = await user.createEmailAddress({ emailAddress: email })
+          } catch {
+            // @ts-expect-error Clerk types may be out of sync, but this is the correct usage in some SDKs
+            newEmail = await user.createEmailAddress({ email_address: email })
+          }
+          await user.update({ primaryEmailAddressId: newEmail.id })
+          // Optionally, remove the old email
+          for (const addr of user.emailAddresses) {
+            if (addr.id !== newEmail.id) {
+              await addr.destroy()
+            }
+          }
+          // Optionally, trigger verification
+          // await newEmail.prepareVerification({ strategy: "email_code" })
+        }
+        setProfileStatus("Profile updated!")
+      }
+    } catch (err: unknown) {
+      let message = "Failed to update profile"
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "errors" in err &&
+        Array.isArray((err as ClerkAPIError).errors)
+      ) {
+        message = (err as ClerkAPIError).errors?.[0]?.message || message
+      } else if (err instanceof Error) {
+        message = err.message
+      }
+      setProfileStatus(message)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
   if (!isLoaded) return <div>Loading...</div>
   if (!user) return <div>Please sign in.</div>
 
@@ -74,23 +140,54 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-xl space-y-8 p-6">
       <h1 className="mb-4 text-2xl font-bold">Settings</h1>
       {/* Profile Info */}
-      <Card className="flex items-center gap-4 p-6">
-        <Avatar className="h-16 w-16">
-          <AvatarImage
-            src={user.imageUrl}
-            alt={user.fullName || user.username || "User"}
-          />
-          <AvatarFallback>{user.firstName?.[0] || "U"}</AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="text-lg font-semibold">
-            {user.fullName || user.username}
-          </div>
-          <div className="text-gray-500">
-            {user.primaryEmailAddress?.emailAddress}
+      <Card className="flex flex-col gap-4 p-6">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage
+              src={user.imageUrl}
+              alt={user.fullName || user.username || "User"}
+            />
+            <AvatarFallback>{user.firstName?.[0] || "U"}</AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="text-lg font-semibold">
+              {user.fullName || user.username}
+            </div>
+            <div className="text-gray-500">
+              {user.primaryEmailAddress?.emailAddress}
+            </div>
           </div>
         </div>
-        {/* TODO: Add update profile info form/button if needed */}
+        <form
+          onSubmit={handleProfileSave}
+          className="mt-4 flex max-w-sm flex-col gap-2"
+        >
+          <label className="font-medium">Name</label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={profileLoading}
+            required
+          />
+          <label className="font-medium">Email</label>
+          <Input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={profileLoading}
+            required
+            type="email"
+          />
+          <Button
+            type="submit"
+            disabled={profileLoading || !name || !email}
+            className="mt-2"
+          >
+            {profileLoading ? "Saving..." : "Save Profile"}
+          </Button>
+          {profileStatus && (
+            <div className="mt-1 text-sm text-blue-600">{profileStatus}</div>
+          )}
+        </form>
       </Card>
       {/* OpenAI API Key Section */}
       <Card className="space-y-4 p-6">

@@ -3,7 +3,7 @@ import { NextRequest } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
 
 export async function GET() {
-  const { userId } = auth()
+  const { userId } = await auth()
   if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
   const supabase = createServerSupabaseClient()
   const { data } = await supabase
@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = auth()
+  const { userId } = await auth()
   if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
   const { openai_key } = await req.json()
   if (!openai_key) return new Response(JSON.stringify({ error: "Missing key" }), { status: 400 })
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  const { userId } = auth()
+  const { userId } = await auth()
   if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
   const supabase = createServerSupabaseClient()
   const { error } = await supabase

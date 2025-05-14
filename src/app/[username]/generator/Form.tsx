@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import Image from "next/image"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 
@@ -36,28 +37,12 @@ export default function GeneratorForm({ userId }: { userId: string }) {
   const [saveStatus, setSaveStatus] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [editedResponse, setEditedResponse] = useState("")
-  const [isLocalApiKey, setIsLocalApiKey] = useState(false)
-  const [isPending, startTransition] = useTransition()
   const [hasUserKey, setHasUserKey] = useState<boolean | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const availableModels = hasUserKey ? ALL_MODELS : NANO_MODEL
 
   const isFormValid = prompt.trim() && (hasUserKey || apiKey.trim())
-
-  useEffect(() => {
-    async function checkLocalApiKey() {
-      if (typeof window !== "undefined") {
-        try {
-          const res = await fetch("/api/generate", { method: "OPTIONS" })
-          const data = await res.json()
-          setIsLocalApiKey(Boolean(data.hasLocalApiKey))
-        } catch {
-          setIsLocalApiKey(false)
-        }
-      }
-    }
-    checkLocalApiKey()
-  }, [])
 
   useEffect(() => {
     async function checkUserKey() {
@@ -249,9 +234,9 @@ export default function GeneratorForm({ userId }: { userId: string }) {
             <div className="mb-2 text-sm text-yellow-700">
               Only GPT-4.1 Nano is available unless you add your own OpenAI API
               key in{" "}
-              <a href="/settings" className="underline">
+              <Link href="/settings" className="underline">
                 Settings
-              </a>
+              </Link>
               .
             </div>
           )}
