@@ -23,6 +23,7 @@ import {
 
 export function NavUser() {
   const { isLoaded, isSignedIn, user } = useUser()
+  const username = user?.username || ""
   const { isMobile } = useSidebar()
   const { signOut } = useClerk()
   const router = useRouter()
@@ -44,9 +45,7 @@ export function NavUser() {
   }
 
   const handleAccountClick = () => {
-    router.push(
-      "/user" /* Clerk's default user profile route, or use Clerk's <UserProfile /> if you have a custom route */
-    )
+    router.push(`/${username}/settings`)
   }
 
   const handleLogout = async () => {
@@ -99,7 +98,7 @@ export function NavUser() {
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={handleAccountClick}>
                 <UserCircle />
-                Account
+                Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

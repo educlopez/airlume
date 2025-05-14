@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button"
 
 import { saveGeneration } from "./actions"
 
-const MODELS = [
+const ALL_MODELS = [
   { label: "GPT-4o (latest, fast)", value: "gpt-4o" },
   { label: "GPT-4 Turbo", value: "gpt-4-turbo" },
   { label: "GPT-3.5 Turbo (cheap)", value: "gpt-3.5-turbo" },
+  { label: "GPT-4.1 Nano (cheapest)", value: "gpt-4.1-nano-2025-04-14" },
+]
+const NANO_MODEL = [
   { label: "GPT-4.1 Nano (cheapest)", value: "gpt-4.1-nano-2025-04-14" },
 ]
 
@@ -18,7 +21,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
   const [prompt, setPrompt] = useState("")
   const [apiKey, setApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
-  const [model, setModel] = useState(MODELS[0].value)
+  const [model, setModel] = useState(ALL_MODELS[0].value)
   const [temperature, setTemperature] = useState(1)
   const [maxTokens, setMaxTokens] = useState(512)
   const [response, setResponse] = useState("")
@@ -35,8 +38,11 @@ export default function GeneratorForm({ userId }: { userId: string }) {
   const [editedResponse, setEditedResponse] = useState("")
   const [isLocalApiKey, setIsLocalApiKey] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [hasUserKey, setHasUserKey] = useState<boolean | null>(null)
 
-  const isFormValid = prompt.trim() && (isLocalApiKey || apiKey.trim())
+  const availableModels = hasUserKey ? ALL_MODELS : NANO_MODEL
+
+  const isFormValid = prompt.trim() && (hasUserKey || apiKey.trim())
 
   useEffect(() => {
     async function checkLocalApiKey() {
@@ -51,6 +57,26 @@ export default function GeneratorForm({ userId }: { userId: string }) {
       }
     }
     checkLocalApiKey()
+  }, [])
+
+  useEffect(() => {
+    async function checkUserKey() {
+      try {
+        const res = await fetch("/api/user-openai-key")
+        const data = await res.json()
+        setHasUserKey(Boolean(data.hasKey))
+        if (data.hasKey) {
+          setApiKey("") // never keep key in state
+          setModel(ALL_MODELS[0].value)
+        } else {
+          setModel(NANO_MODEL[0].value)
+        }
+      } catch {
+        setHasUserKey(false)
+        setModel(NANO_MODEL[0].value)
+      }
+    }
+    checkUserKey()
   }, [])
 
   useEffect(() => {
@@ -176,7 +202,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
               placeholder="Describe what you want to generate..."
             />
           </div>
-          {!isLocalApiKey && (
+          {hasUserKey === false && (
             <div>
               <label className="mb-1 block font-medium">
                 OpenAI API Key <span className="text-red-500">*</span>
@@ -213,14 +239,31 @@ export default function GeneratorForm({ userId }: { userId: string }) {
               </div>
             </div>
           )}
+          {hasUserKey && (
+            <div className="mb-2 text-sm text-green-700">
+              You can generate content using your own OpenAI API key. All models
+              are available.
+            </div>
+          )}
+          {hasUserKey === false && (
+            <div className="mb-2 text-sm text-yellow-700">
+              Only GPT-4.1 Nano is available unless you add your own OpenAI API
+              key in{" "}
+              <a href="/settings" className="underline">
+                Settings
+              </a>
+              .
+            </div>
+          )}
           <div>
             <label className="mb-1 block font-medium">Model</label>
             <select
-              className="w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
+              className="w-full rounded border p-2"
               value={model}
               onChange={(e) => setModel(e.target.value)}
+              disabled={availableModels.length === 1}
             >
-              {MODELS.map((m) => (
+              {availableModels.map((m) => (
                 <option key={m.value} value={m.value}>
                   {m.label}
                 </option>

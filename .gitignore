@@ -45,3 +45,8 @@ next-env.d.ts
 
 #cursor
 /.cursor/
+
+/notes.md
+
+/supabase/
+/.vscode/
