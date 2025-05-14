@@ -41,6 +41,7 @@ export async function saveGeneration({
       user_id: userId,
       response,
       image_url: imageUrl,
+      created_at: new Date().toISOString(),
     },
   ])
   if (error) throw error

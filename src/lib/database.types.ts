@@ -15,18 +15,21 @@ export type Database = {
           image_url: string | null
           response: string
           user_id: string
+          created_at: string
         }
         Insert: {
           id?: string
           image_url?: string | null
           response: string
           user_id?: string
+          created_at?: string
         }
         Update: {
           id?: string
           image_url?: string | null
           response?: string
           user_id?: string
+          created_at?: string
         }
         Relationships: []
       }
