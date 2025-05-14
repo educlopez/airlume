@@ -16,6 +16,7 @@ export type Database = {
           response: string
           user_id: string
           created_at: string
+          status: 'draft' | 'queue' | 'sent'
         }
         Insert: {
           id?: string
@@ -23,6 +24,7 @@ export type Database = {
           response: string
           user_id?: string
           created_at?: string
+          status?: 'draft' | 'queue' | 'sent'
         }
         Update: {
           id?: string
@@ -30,6 +32,7 @@ export type Database = {
           response?: string
           user_id?: string
           created_at?: string
+          status?: 'draft' | 'queue' | 'sent'
         }
         Relationships: []
       }

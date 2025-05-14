@@ -1,47 +1,66 @@
-import Image from "next/image"
 import { currentUser } from "@clerk/nextjs/server"
 
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { PostCard } from "./PostCard"
 
 export default async function PostsPage() {
   const user = await currentUser()
   if (!user) return <div>Please sign in to view your posts.</div>
 
+  const safeUser = {
+    id: user.id,
+    username: user.username,
+    fullName: user.fullName,
+    firstName: user.firstName,
+    imageUrl: user.imageUrl,
+  }
+
   const supabase = createServerSupabaseClient()
   const { data: generations, error } = await supabase
     .from("generations")
-    .select("id, response, image_url")
+    .select("id, response, image_url, created_at, status")
     .eq("user_id", user.id)
-    .order("id", { ascending: false })
+    .order("created_at", { ascending: false })
 
   if (error) return <div>Error loading posts: {error.message}</div>
   if (!generations || generations.length === 0)
     return <div>No posts found.</div>
 
+  const statusTabs = [
+    { value: "draft", label: "Drafts" },
+    { value: "queue", label: "Queue" },
+    { value: "sent", label: "Sent" },
+  ]
+
   return (
     <div className="mx-auto max-w-2xl p-6">
       <h1 className="mb-6 text-2xl font-bold">Your Posts</h1>
-      <div className="space-y-8">
-        {generations.map((gen) => (
-          <div
-            key={gen.id}
-            className="flex flex-col gap-4 rounded border bg-white p-4 shadow-sm"
-          >
-            {gen.image_url && (
-              <Image
-                src={gen.image_url}
-                alt="Post image"
-                width={400}
-                height={220}
-                className="max-h-56 rounded border object-contain"
-              />
-            )}
-            <div className="whitespace-pre-wrap text-gray-800">
-              {gen.response}
+      <Tabs defaultValue="draft" className="w-full">
+        <TabsList className="mb-6">
+          {statusTabs.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {statusTabs.map((tab) => (
+          <TabsContent key={tab.value} value={tab.value}>
+            <div className="space-y-8">
+              {generations.filter((g) => g.status === tab.value).length ===
+                0 && (
+                <div className="text-muted-foreground">No posts found.</div>
+              )}
+              {generations
+                .filter((g) => g.status === tab.value)
+                .map((gen) => (
+                  <PostCard key={gen.id} generation={gen} user={safeUser} />
+                ))}
             </div>
-          </div>
+          </TabsContent>
         ))}
-      </div>
+      </Tabs>
     </div>
   )
 }

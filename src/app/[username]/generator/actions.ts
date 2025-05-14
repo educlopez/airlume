@@ -42,8 +42,37 @@ export async function saveGeneration({
       response,
       image_url: imageUrl,
       created_at: new Date().toISOString(),
+      status: 'draft',
     },
   ])
+  if (error) throw error
+  return { success: true }
+}
+
+export async function updateGeneration({
+  id,
+  response,
+  image_url,
+}: {
+  id: string
+  response: string
+  image_url?: string | null
+}) {
+  const supabase = createServerSupabaseClient()
+  const { error } = await supabase
+    .from("generations")
+    .update({ response, image_url })
+    .eq("id", id)
+  if (error) throw error
+  return { success: true }
+}
+
+export async function deleteGeneration(id: string) {
+  const supabase = createServerSupabaseClient()
+  const { error } = await supabase
+    .from("generations")
+    .delete()
+    .eq("id", id)
   if (error) throw error
   return { success: true }
 }
