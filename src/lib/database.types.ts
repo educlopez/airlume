@@ -11,28 +11,79 @@ export type Database = {
     Tables: {
       generations: {
         Row: {
+          created_at: string | null
           id: string
           image_url: string | null
           response: string
+          status: Database["public"]["Enums"]["generation_status"]
           user_id: string
-          created_at: string
-          status: 'draft' | 'queue' | 'sent'
         }
         Insert: {
+          created_at?: string | null
           id?: string
           image_url?: string | null
           response: string
+          status?: Database["public"]["Enums"]["generation_status"]
           user_id?: string
-          created_at?: string
-          status?: 'draft' | 'queue' | 'sent'
         }
         Update: {
+          created_at?: string | null
           id?: string
           image_url?: string | null
           response?: string
+          status?: Database["public"]["Enums"]["generation_status"]
           user_id?: string
-          created_at?: string
-          status?: 'draft' | 'queue' | 'sent'
+        }
+        Relationships: []
+      }
+      twitter_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          oauth_token: string
+          oauth_token_secret: string
+          screen_name: string | null
+          twitter_user_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          oauth_token: string
+          oauth_token_secret: string
+          screen_name?: string | null
+          twitter_user_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          oauth_token?: string
+          oauth_token_secret?: string
+          screen_name?: string | null
+          twitter_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_openai_keys: {
+        Row: {
+          created_at: string | null
+          id: string
+          openai_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          openai_key: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          openai_key?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -44,7 +95,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      generation_status: "draft" | "queue" | "sent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -159,6 +210,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      generation_status: ["draft", "queue", "sent"],
+    },
   },
 } as const

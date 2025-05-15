@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
     const externalAccounts: Array<{ provider: string }> = user.externalAccounts || [];
 
     // Debug: log external accounts
-    console.log("External accounts:", externalAccounts);
 
     // Dynamically find the correct Twitter/X provider key
     const twitterAccount = externalAccounts.find(
@@ -37,8 +36,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No Twitter/X connection found in Clerk.", accounts: externalAccounts }, { status: 400 });
     }
 
-    // Debug: log the provider string
-    console.log("Twitter account provider:", twitterAccount.provider);
 
     // Use the provider key without the oauth_ prefix (per Clerk deprecation warning)
     let providerKey = twitterAccount.provider;
@@ -83,7 +80,7 @@ export async function POST(req: NextRequest) {
     // Update Supabase status to 'sent'
     if (id) {
       const supabase = createServerSupabaseClient();
-      const { error: updateError, data: updateData } = await supabase
+      const { error: updateError } = await supabase
         .from("generations")
         .update({ status: "sent" })
         .eq("id", id)
@@ -93,7 +90,7 @@ export async function POST(req: NextRequest) {
         console.error("Failed to update post status in Supabase:", updateError);
         return NextResponse.json({ error: "Tweet posted, but failed to update status in Supabase", supabaseError: updateError.message }, { status: 500 });
       }
-      console.log("Supabase update result:", updateData);
+
     } else {
       console.warn("No post ID provided for status update.");
     }
