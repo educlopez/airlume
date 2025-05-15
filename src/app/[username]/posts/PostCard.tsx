@@ -50,9 +50,11 @@ type User = {
 export function PostCard({
   generation,
   user,
+  hasTwitter,
 }: {
   generation: Generation
   user: User
+  hasTwitter: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [response, setResponse] = useState(generation.response)
@@ -97,8 +99,19 @@ export function PostCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Send className="mr-2 size-4" /> Publish Now
+            <DropdownMenuItem asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!hasTwitter}
+                title={
+                  !hasTwitter
+                    ? "Connect your Twitter account to enable this action."
+                    : undefined
+                }
+              >
+                <Send className="mr-2 size-4" /> Publish Now
+              </Button>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={async () => {
@@ -143,7 +156,16 @@ export function PostCard({
           Created {new Date(generation.created_at).toLocaleString()}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!hasTwitter}
+            title={
+              !hasTwitter
+                ? "Connect your Twitter account to enable this action."
+                : undefined
+            }
+          >
             Add to Queue
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>

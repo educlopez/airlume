@@ -9,6 +9,10 @@ export default async function PostsPage() {
   const user = await currentUser()
   if (!user) return <div>Please sign in to view your posts.</div>
 
+  const hasTwitter = user.externalAccounts?.some(
+    (acc) => acc.provider === "oauth_twitter"
+  )
+
   const safeUser = {
     id: user.id,
     username: user.username,
@@ -37,6 +41,12 @@ export default async function PostsPage() {
   return (
     <div className="mx-auto max-w-2xl p-6">
       <h1 className="mb-6 text-2xl font-bold">Your Posts</h1>
+      {!hasTwitter && (
+        <div className="mb-4 rounded bg-yellow-100 p-3 text-sm text-yellow-800">
+          Connect your Twitter account in <b>Account</b> settings to publish
+          posts directly to X.com.
+        </div>
+      )}
       <Tabs defaultValue="draft" className="w-full">
         <TabsList className="mb-6">
           {statusTabs.map((tab) => (
@@ -55,7 +65,12 @@ export default async function PostsPage() {
               {generations
                 .filter((g) => g.status === tab.value)
                 .map((gen) => (
-                  <PostCard key={gen.id} generation={gen} user={safeUser} />
+                  <PostCard
+                    key={gen.id}
+                    generation={gen}
+                    user={safeUser}
+                    hasTwitter={hasTwitter}
+                  />
                 ))}
             </div>
           </TabsContent>
