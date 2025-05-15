@@ -336,123 +336,126 @@ export function PostCard({
           >
             Publish
           </Button>
-        </div>
-      </CardFooter>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Pencil className="mr-1 size-4" /> Edit
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
-          <DialogHeader>
-            <DialogTitle>Edit Draft</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4 flex w-full flex-col gap-6 md:flex-row">
-            <div className="flex flex-1 flex-col gap-4">
-              <div className="mb-2 flex items-center gap-2">
-                <Avatar>
-                  <AvatarImage
-                    src={user?.imageUrl ?? ""}
-                    alt={user?.fullName || user?.username || "User"}
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Pencil className="mr-1 size-4" /> Edit
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
+              <DialogHeader>
+                <DialogTitle>Edit Draft</DialogTitle>
+              </DialogHeader>
+              <div className="mt-4 flex w-full flex-col gap-6 md:flex-row">
+                <div className="flex flex-1 flex-col gap-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Avatar>
+                      <AvatarImage
+                        src={user?.imageUrl ?? ""}
+                        alt={user?.fullName || user?.username || "User"}
+                      />
+                      <AvatarFallback>
+                        {user?.firstName?.[0] || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">
+                      {user?.fullName || user?.username}
+                    </span>
+                  </div>
+                  <textarea
+                    className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
+                    value={response}
+                    onChange={(e) => setResponse(e.target.value)}
                   />
-                  <AvatarFallback>{user?.firstName?.[0] || "U"}</AvatarFallback>
-                </Avatar>
-                <span className="font-medium">
-                  {user?.fullName || user?.username}
-                </span>
-              </div>
-              <textarea
-                className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
-                value={response}
-                onChange={(e) => setResponse(e.target.value)}
-              />
-              <div className="mt-2 flex items-center gap-4">
-                {imageUrl !== "" ? (
-                  <div className="relative">
-                    <Image
-                      src={imageUrl || ""}
-                      alt="Preview"
-                      width={80}
-                      height={80}
-                      className="max-h-20 rounded border object-contain"
+                  <div className="mt-2 flex items-center gap-4">
+                    {imageUrl !== "" ? (
+                      <div className="relative">
+                        <Image
+                          src={imageUrl || ""}
+                          alt="Preview"
+                          width={80}
+                          height={80}
+                          className="max-h-20 rounded border object-contain"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="absolute -top-2 -right-2"
+                          onClick={() => {
+                            setImageUrl("")
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ) : null}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
                     />
                     <Button
                       type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="absolute -top-2 -right-2"
-                      onClick={() => {
-                        setImageUrl("")
-                      }}
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      ×
+                      {imageUrl !== "" ? "Change Image" : "Add Image"}
                     </Button>
                   </div>
-                ) : null}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {imageUrl !== "" ? "Change Image" : "Add Image"}
+                </div>
+                <div className="hidden flex-1 border-l pl-6 md:block">
+                  <div className="mb-2 font-semibold">Threads Preview</div>
+                  <div className="rounded-lg border bg-white p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Avatar>
+                        <AvatarImage
+                          src={user?.imageUrl ?? ""}
+                          alt={user?.fullName || user?.username || "User"}
+                        />
+                        <AvatarFallback>
+                          {user?.firstName?.[0] || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">
+                        {user?.fullName || user?.username}
+                      </span>
+                      <span className="text-muted-foreground ml-2 text-xs">
+                        now
+                      </span>
+                    </div>
+                    <div className="mb-2 whitespace-pre-wrap text-gray-800">
+                      {response}
+                    </div>
+                    {imageUrl !== "" ? (
+                      <Image
+                        src={imageUrl || ""}
+                        alt="Preview"
+                        width={240}
+                        height={180}
+                        className="max-h-40 rounded border object-contain"
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="mt-6">
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={saving}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? "Saving..." : "Save Draft"}
                 </Button>
-              </div>
-            </div>
-            <div className="hidden flex-1 border-l pl-6 md:block">
-              <div className="mb-2 font-semibold">Threads Preview</div>
-              <div className="rounded-lg border bg-white p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Avatar>
-                    <AvatarImage
-                      src={user?.imageUrl ?? ""}
-                      alt={user?.fullName || user?.username || "User"}
-                    />
-                    <AvatarFallback>
-                      {user?.firstName?.[0] || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">
-                    {user?.fullName || user?.username}
-                  </span>
-                  <span className="text-muted-foreground ml-2 text-xs">
-                    now
-                  </span>
-                </div>
-                <div className="mb-2 whitespace-pre-wrap text-gray-800">
-                  {response}
-                </div>
-                {imageUrl !== "" ? (
-                  <Image
-                    src={imageUrl || ""}
-                    alt="Preview"
-                    width={240}
-                    height={180}
-                    className="max-h-40 rounded border object-contain"
-                  />
-                ) : null}
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="mt-6">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={saving}>
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Save Draft"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardFooter>
+
       <Dialog open={publishModalOpen} onOpenChange={setPublishModalOpen}>
         <DialogContent>
           <DialogHeader>
