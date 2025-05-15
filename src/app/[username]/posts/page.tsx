@@ -10,7 +10,12 @@ export default async function PostsPage() {
   if (!user) return <div>Please sign in to view your posts.</div>
 
   const hasTwitter = user.externalAccounts?.some(
-    (acc) => acc.provider === "oauth_twitter"
+    (acc) =>
+      acc.provider === "oauth_twitter" ||
+      acc.provider === "twitter" ||
+      acc.provider === "x" ||
+      acc.provider?.includes("twitter") ||
+      acc.provider?.includes("x")
   )
 
   const safeUser = {

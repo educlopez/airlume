@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Copy, EllipsisVertical, Pencil, Send, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -61,6 +63,7 @@ export function PostCard({
   const [imageUrl, setImageUrl] = useState(generation.image_url ?? "")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
+  const router = useRouter()
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -80,6 +83,24 @@ export function PostCard({
     setSaving(false)
     setOpen(false)
     // Optionally, refresh the page or mutate SWR/React Query
+  }
+
+  const handlePublish = async () => {
+    setSaving(true)
+    // Remove all image logic, only send text and id
+    const res = await fetch("/api/twitter/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postContent: response, id: generation.id }),
+    })
+    setSaving(false)
+    if (res.ok) {
+      toast.success("Published to Twitter!")
+      router.refresh()
+    } else {
+      const data = await res.json()
+      toast.error(data.error || "Failed to publish.")
+    }
   }
 
   return (
@@ -103,14 +124,21 @@ export function PostCard({
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={!hasTwitter}
+                disabled={!hasTwitter || saving}
                 title={
                   !hasTwitter
                     ? "Connect your Twitter account to enable this action."
                     : undefined
                 }
+                onClick={handlePublish}
               >
-                <Send className="mr-2 size-4" /> Publish Now
+                {saving ? (
+                  "Publishing..."
+                ) : (
+                  <>
+                    <Send className="mr-2 size-4" /> Publish Now
+                  </>
+                )}
               </Button>
             </DropdownMenuItem>
             <DropdownMenuItem
