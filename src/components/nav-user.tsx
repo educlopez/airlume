@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useClerk, useUser } from "@clerk/nextjs"
 import { EllipsisVertical, LogOut, UserCircle } from "lucide-react"
@@ -20,6 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { UserProfileDialog } from "@/components/UserProfileDialog"
 
 export function NavUser() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -27,6 +29,7 @@ export function NavUser() {
   const { isMobile } = useSidebar()
   const { signOut } = useClerk()
   const router = useRouter()
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false)
 
   if (!isLoaded) {
     return (
@@ -46,6 +49,10 @@ export function NavUser() {
 
   const handleAccountClick = () => {
     router.push(`/${username}/settings`)
+  }
+
+  const handleAccountDialog = () => {
+    setAccountDialogOpen(true)
   }
 
   const handleLogout = async () => {
@@ -100,6 +107,10 @@ export function NavUser() {
                 <UserCircle />
                 Settings
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAccountDialog}>
+                <UserCircle />
+                Account
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
@@ -107,6 +118,10 @@ export function NavUser() {
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
+          <UserProfileDialog
+            open={accountDialogOpen}
+            onOpenChange={setAccountDialogOpen}
+          />
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

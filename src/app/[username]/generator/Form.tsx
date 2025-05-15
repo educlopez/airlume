@@ -233,8 +233,8 @@ export default function GeneratorForm({ userId }: { userId: string }) {
           {hasUserKey === false && (
             <div className="mb-2 text-sm text-yellow-700">
               Only GPT-4.1 Nano is available unless you add your own OpenAI API
-              key in{" "}
-              <Link href="/settings" className="underline">
+              key in {/* TODO: Use dynamic username if available */}
+              <Link href={"/settings"} className="underline">
                 Settings
               </Link>
               .
