@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.2.0",
     "@ai-sdk/react": "^1.2.0",
+    "@atproto/api": "^0.15.6",
     "@clerk/nextjs": "^6.19.2",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
     "@radix-ui/react-avatar": "^1.1.9",
