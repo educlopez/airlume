@@ -17,6 +17,7 @@ export type Database = {
           response: string
           status: Database["public"]["Enums"]["generation_status"]
           user_id: string
+          scheduled_at: string | null
         }
         Insert: {
           created_at?: string | null
@@ -25,6 +26,7 @@ export type Database = {
           response: string
           status?: Database["public"]["Enums"]["generation_status"]
           user_id?: string
+          scheduled_at?: string | null
         }
         Update: {
           created_at?: string | null
@@ -33,6 +35,7 @@ export type Database = {
           response?: string
           status?: Database["public"]["Enums"]["generation_status"]
           user_id?: string
+          scheduled_at?: string | null
         }
         Relationships: []
       }

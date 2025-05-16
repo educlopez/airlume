@@ -105,3 +105,19 @@ export async function duplicateGeneration({
   if (insertError) throw insertError
   return { success: true }
 }
+
+export async function scheduleGeneration({
+  id,
+  scheduled_at,
+}: {
+  id: string
+  scheduled_at: string
+}) {
+  const supabase = createServerSupabaseClient()
+  const { error } = await supabase
+    .from("generations")
+    .update({ scheduled_at, status: 'queue' })
+    .eq("id", id)
+  if (error) throw error
+  return { success: true }
+}

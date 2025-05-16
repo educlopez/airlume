@@ -29,7 +29,7 @@ export default async function PostsPage() {
   const supabase = createServerSupabaseClient()
   const { data: generations, error } = await supabase
     .from("generations")
-    .select("id, response, image_url, created_at, status")
+    .select("id, response, image_url, created_at, status, scheduled_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 

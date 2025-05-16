@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { format } from "date-fns"
 import {
   Copy,
   EllipsisVertical,
@@ -17,6 +18,7 @@ import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -35,10 +37,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 
 import {
   deleteGeneration,
   duplicateGeneration,
+  scheduleGeneration,
   updateGeneration,
 } from "../generator/actions"
 
@@ -48,6 +52,7 @@ type Generation = {
   image_url: string | null
   created_at: string
   status: "draft" | "queue" | "sent"
+  scheduled_at?: string | null
 }
 
 type User = {
@@ -85,6 +90,10 @@ export function PostCard({
   const [publishTwitter, setPublishTwitter] = useState(false)
   const [publishBluesky, setPublishBluesky] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>()
+  const [scheduledTime, setScheduledTime] = useState<string>("")
+  const [scheduling, setScheduling] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -236,6 +245,24 @@ export function PostCard({
     }
   }
 
+  const handleSchedule = async () => {
+    if (!scheduledDate || !scheduledTime) return
+    // Combine date and time into ISO string
+    const [hours, minutes] = scheduledTime.split(":")
+    const scheduled = new Date(scheduledDate)
+    scheduled.setHours(Number(hours))
+    scheduled.setMinutes(Number(minutes))
+    scheduled.setSeconds(0)
+    scheduled.setMilliseconds(0)
+    await scheduleGeneration({
+      id: generation.id,
+      scheduled_at: scheduled.toISOString(),
+    })
+    setScheduling(false)
+    setScheduleDialogOpen(false)
+    window.location.reload()
+  }
+
   useEffect(() => {
     if (blueskyDialogOpen) {
       setLoadingBluesky(true)
@@ -262,6 +289,12 @@ export function PostCard({
             {generation.status.charAt(0).toUpperCase() +
               generation.status.slice(1)}
           </Badge>
+          {generation.scheduled_at && (
+            <span className="text-muted-foreground ml-2 text-xs">
+              Scheduled:{" "}
+              {format(new Date(generation.scheduled_at), "MMM d, yyyy h:mm a")}
+            </span>
+          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -322,6 +355,7 @@ export function PostCard({
                 ? "Connect your Twitter account to enable this action."
                 : undefined
             }
+            onClick={() => setScheduleDialogOpen(true)}
           >
             Add to Queue
           </Button>
@@ -625,6 +659,44 @@ export function PostCard({
                 : !hasBluesky
                   ? "Save Credentials and Publish"
                   : "Publish to Bluesky"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Post</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <label className="font-medium">Select date:</label>
+            <Calendar
+              mode="single"
+              selected={scheduledDate}
+              onSelect={setScheduledDate}
+              fromDate={new Date()}
+              className="rounded-md border"
+            />
+            <label className="font-medium">Select time:</label>
+            <Input
+              type="time"
+              value={scheduledTime}
+              onChange={(e) => setScheduledTime(e.target.value)}
+              className="w-40"
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" disabled={scheduling}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              variant="custom"
+              onClick={handleSchedule}
+              disabled={scheduling || !scheduledDate || !scheduledTime}
+            >
+              {scheduling ? "Scheduling..." : "Add to Queue"}
             </Button>
           </DialogFooter>
         </DialogContent>
