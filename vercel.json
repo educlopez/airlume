@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/publish-queue",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

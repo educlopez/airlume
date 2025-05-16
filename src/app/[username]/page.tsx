@@ -47,7 +47,7 @@ export default async function DashboardHomePage() {
   // Bluesky connection: check user_bluesky_accounts table for user_id
   let isBlueskyConnected = false
   try {
-    const { data: blueskyAccount, error: blueskyError } = await supabase
+    const { data: blueskyAccount } = await supabase
       .from("user_bluesky_accounts")
       .select("id")
       .eq("user_id", userId)
@@ -142,8 +142,9 @@ export default async function DashboardHomePage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
           <blockquote className="text-muted-foreground mb-4 italic">
-            "ContentPilot AI helped me generate 10 high-quality posts in a
-            single afternoon. The scheduling and AI presets are a game changer!"
+            &quot;ContentPilot AI helped me generate 10 high-quality posts in a
+            single afternoon. The scheduling and AI presets are a game
+            changer!&quot;
           </blockquote>
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-gray-300" />

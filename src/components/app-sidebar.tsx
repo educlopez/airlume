@@ -2,13 +2,7 @@
 
 import * as React from "react"
 import { useUser } from "@clerk/nextjs"
-import {
-  Database,
-  Image,
-  LayoutDashboard,
-  NotebookPen,
-  Pencil,
-} from "lucide-react"
+import { Image, LayoutDashboard, NotebookPen, Pencil } from "lucide-react"
 
 import Copyright from "@/components/copyright"
 import { NavDocuments } from "@/components/nav-documents"
