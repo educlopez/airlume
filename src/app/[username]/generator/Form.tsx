@@ -371,6 +371,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
           )}
           <Button
             type="submit"
+            variant="custom"
             disabled={!isFormValid || loading}
             className="flex w-full items-center justify-center"
           >

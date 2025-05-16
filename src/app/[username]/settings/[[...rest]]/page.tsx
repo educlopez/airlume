@@ -188,7 +188,11 @@ export default function SettingsPage() {
               onChange={(e) => setApiKey(e.target.value)}
               disabled={loading}
             />
-            <Button onClick={handleSave} disabled={loading || !apiKey}>
+            <Button
+              variant="custom"
+              onClick={handleSave}
+              disabled={loading || !apiKey}
+            >
               Save API Key
             </Button>
             <div className="text-sm text-gray-500">
@@ -227,7 +231,7 @@ export default function SettingsPage() {
         ) : (
           <div className="space-y-2">
             <div>
-              <label className="mb-1 block flex items-center gap-1 font-medium">
+              <label className="mb-1 flex items-center gap-1 font-medium">
                 Handle
                 <span
                   className="inline-block"

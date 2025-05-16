@@ -254,10 +254,10 @@ export function PostCard({
   }, [blueskyDialogOpen])
 
   return (
-    <Card>
+    <Card className="shadow-custom border-none">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="flex items-center gap-1">
+          <Badge className="bg-primary shadow-custom text-foreground flex items-center gap-1">
             <Pencil className="size-3" />
             {generation.status.charAt(0).toUpperCase() +
               generation.status.slice(1)}
@@ -304,12 +304,12 @@ export function PostCard({
             className="max-h-36 rounded border object-contain"
           />
         ) : null}
-        <div className="flex-1 whitespace-pre-wrap text-gray-800">
+        <div className="text-foreground flex-1 whitespace-pre-wrap">
           {response}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-2 md:flex-row md:items-center md:justify-between">
-        <div className="text-muted-foreground text-xs">
+        <div className="text-primary-foreground text-xs">
           Created {new Date(generation.created_at).toLocaleString()}
         </div>
         <div className="flex gap-2">
@@ -326,7 +326,7 @@ export function PostCard({
             Add to Queue
           </Button>
           <Button
-            variant="default"
+            variant="custom"
             size="sm"
             onClick={() => {
               setPublishModalOpen(true)
@@ -447,7 +447,7 @@ export function PostCard({
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button variant="custom" onClick={handleSave} disabled={saving}>
                   {saving ? "Saving..." : "Save Draft"}
                 </Button>
               </DialogFooter>
@@ -490,6 +490,7 @@ export function PostCard({
               </Button>
             </DialogClose>
             <Button
+              variant="custom"
               onClick={handleMultiPublish}
               disabled={publishing || (!publishTwitter && !publishBluesky)}
             >
@@ -517,7 +518,7 @@ export function PostCard({
             ) : (
               <>
                 <div>
-                  <label className="mb-1 block flex items-center gap-1 font-medium">
+                  <label className="mb-1 flex items-center gap-1 font-medium">
                     Handle
                     <span
                       className="inline-block"
@@ -611,6 +612,7 @@ export function PostCard({
               </Button>
             </DialogClose>
             <Button
+              variant="custom"
               onClick={handlePublishBluesky}
               disabled={
                 publishingBluesky ||

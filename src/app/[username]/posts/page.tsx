@@ -44,7 +44,7 @@ export default async function PostsPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
+    <div className="space-y-6 p-6">
       <h1 className="mb-6 text-2xl font-bold">Your Posts</h1>
       {!hasTwitter && (
         <div className="mb-4 rounded bg-yellow-100 p-3 text-sm text-yellow-800">
@@ -62,7 +62,7 @@ export default async function PostsPage() {
         </TabsList>
         {statusTabs.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
-            <div className="space-y-8">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {generations.filter((g) => g.status === tab.value).length ===
                 0 && (
                 <div className="text-muted-foreground">No posts found.</div>

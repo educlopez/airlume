@@ -2,7 +2,13 @@
 
 import * as React from "react"
 import { useUser } from "@clerk/nextjs"
-import { Database, LayoutDashboard, NotebookPen } from "lucide-react"
+import {
+  Database,
+  Image,
+  LayoutDashboard,
+  NotebookPen,
+  Pencil,
+} from "lucide-react"
 
 import Copyright from "@/components/copyright"
 import { NavDocuments } from "@/components/nav-documents"
@@ -31,7 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: LayoutDashboard,
     },
     {
-      title: "Generator",
+      title: "Create Post",
       url: `/${username}/generator`,
       icon: NotebookPen,
     },
@@ -40,7 +46,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       title: "Posts",
       url: `/${username}/posts`,
-      icon: Database,
+      icon: Pencil,
+    },
+    {
+      title: "Media Library",
+      url: `/${username}/media-library`,
+      icon: Image,
     },
   ]
 
