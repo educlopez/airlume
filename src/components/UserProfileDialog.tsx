@@ -1,5 +1,6 @@
 import React from "react"
 import { UserProfile } from "@clerk/nextjs"
+import { XIcon } from "lucide-react"
 
 export function UserProfileDialog({
   open,
@@ -16,7 +17,7 @@ export function UserProfileDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        className="bg-background/90 fixed inset-0 backdrop-blur-xs transition-opacity"
         aria-hidden="true"
         onClick={() => onOpenChange(false)}
       />
@@ -25,23 +26,10 @@ export function UserProfileDialog({
         {/* Close button */}
         <button
           onClick={() => onOpenChange(false)}
-          className="absolute top-4 right-4 z-60 rounded-full border border-zinc-200 bg-white p-2 text-zinc-500 hover:text-zinc-900 focus:outline-none dark:hover:text-white"
+          className="bg-background text-foreground shadow-custom absolute top-4 right-4 z-60 cursor-pointer rounded-full p-2 opacity-90 hover:opacity-100 focus:outline-none"
           aria-label="Close"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="h-6 w-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <XIcon size={20} />
         </button>
         {/* Optional title for accessibility */}
         <h2 className="sr-only">{title}</h2>
