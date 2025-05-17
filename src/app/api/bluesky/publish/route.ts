@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { BskyAgent } from "@atproto/api";
-import { createServerSupabaseClient } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import crypto from "crypto";
 
 const ALGO = "aes-256-gcm";
@@ -24,22 +24,30 @@ function decrypt(enc: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { postContent, imageBase64, imageAlt, id, handle: reqHandle, appPassword: reqAppPassword } = await req.json();
+    const { postContent, imageBase64, imageAlt, id, handle: reqHandle, appPassword: reqAppPassword, userId: userIdFromBody } = await req.json();
     let handle = reqHandle;
     let appPassword = reqAppPassword;
-    const { userId } = await auth();
+    let userId = userIdFromBody;
 
+    // Si no viene userId, intenta obtenerlo de Clerk (manual)
+    if (!userId) {
+      const authResult = await auth();
+      userId = authResult.userId;
+    }
+    // LOG: userId recibido
+    console.log("[BLUESKY PUBLISH] userId:", userId);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     // Si no hay credenciales, buscar en la DB
     if (!handle || !appPassword) {
-      const supabase = createServerSupabaseClient();
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("user_bluesky_accounts")
         .select("handle, app_password_encrypted")
         .eq("user_id", userId)
         .single();
+      // LOG: resultado de la consulta a user_bluesky_accounts
+      console.log("[BLUESKY PUBLISH] bluesky account data:", data, "error:", error);
       if (error || !data) {
         return NextResponse.json({ error: "Missing Bluesky credentials" }, { status: 400 });
       }
@@ -84,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     // Update Supabase status to 'sent' if id is provided
     if (id) {
-      const supabase = createServerSupabaseClient();
+      const supabase = supabaseAdmin;
       const { error: updateError } = await supabase
         .from("generations")
         .update({ status: "sent" })

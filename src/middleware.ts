@@ -5,6 +5,7 @@ const isProtectedRoute = createRouteMatcher(["/:username(.*)"])
 export default clerkMiddleware(async (auth, req) => {
   // No proteger /api/twitter/publish
   if (req.nextUrl.pathname === "/api/twitter/publish") return;
+  if (req.nextUrl.pathname === "/api/bluesky/publish") return;
 
   if (isProtectedRoute(req)) await auth.protect();
 })

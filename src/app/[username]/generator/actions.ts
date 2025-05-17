@@ -121,3 +121,22 @@ export async function scheduleGeneration({
   if (error) throw error
   return { success: true }
 }
+
+export async function scheduleGenerationMultiPlatform({
+  id,
+  platforms,
+}: {
+  id: string
+  platforms: { platform: string; scheduled_at: string }[]
+}) {
+  const supabase = createServerSupabaseClient();
+  const inserts = platforms.map((p) => ({
+    generation_id: id,
+    platform: p.platform,
+    scheduled_at: p.scheduled_at,
+    status: "queue",
+  }));
+  const { error } = await supabase.from("generations_platforms").insert(inserts);
+  if (error) throw error;
+  return { success: true };
+}

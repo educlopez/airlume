@@ -43,6 +43,7 @@ import {
   deleteGeneration,
   duplicateGeneration,
   scheduleGeneration,
+  scheduleGenerationMultiPlatform,
   updateGeneration,
 } from "../generator/actions"
 
@@ -91,8 +92,16 @@ export function PostCard({
   const [publishBluesky, setPublishBluesky] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
-  const [scheduledDate, setScheduledDate] = useState<Date | undefined>()
-  const [scheduledTime, setScheduledTime] = useState<string>("")
+  const [scheduleTwitter, setScheduleTwitter] = useState(false)
+  const [scheduleBluesky, setScheduleBluesky] = useState(false)
+  const [scheduledDateTwitter, setScheduledDateTwitter] = useState<
+    Date | undefined
+  >()
+  const [scheduledTimeTwitter, setScheduledTimeTwitter] = useState("")
+  const [scheduledDateBluesky, setScheduledDateBluesky] = useState<
+    Date | undefined
+  >()
+  const [scheduledTimeBluesky, setScheduledTimeBluesky] = useState("")
   const [scheduling, setScheduling] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -245,19 +254,29 @@ export function PostCard({
     }
   }
 
-  const handleSchedule = async () => {
-    if (!scheduledDate || !scheduledTime) return
-    // Combine date and time into ISO string
-    const [hours, minutes] = scheduledTime.split(":")
-    const scheduled = new Date(scheduledDate)
-    scheduled.setHours(Number(hours))
-    scheduled.setMinutes(Number(minutes))
-    scheduled.setSeconds(0)
-    scheduled.setMilliseconds(0)
-    await scheduleGeneration({
-      id: generation.id,
-      scheduled_at: scheduled.toISOString(),
-    })
+  const handleScheduleMulti = async () => {
+    const platforms = []
+    if (scheduleTwitter && scheduledDateTwitter && scheduledTimeTwitter) {
+      const [h, m] = scheduledTimeTwitter.split(":")
+      const d = new Date(scheduledDateTwitter)
+      d.setHours(Number(h))
+      d.setMinutes(Number(m))
+      d.setSeconds(0)
+      d.setMilliseconds(0)
+      platforms.push({ platform: "twitter", scheduled_at: d.toISOString() })
+    }
+    if (scheduleBluesky && scheduledDateBluesky && scheduledTimeBluesky) {
+      const [h, m] = scheduledTimeBluesky.split(":")
+      const d = new Date(scheduledDateBluesky)
+      d.setHours(Number(h))
+      d.setMinutes(Number(m))
+      d.setSeconds(0)
+      d.setMilliseconds(0)
+      platforms.push({ platform: "bluesky", scheduled_at: d.toISOString() })
+    }
+    if (platforms.length === 0) return
+    setScheduling(true)
+    await scheduleGenerationMultiPlatform({ id: generation.id, platforms })
     setScheduling(false)
     setScheduleDialogOpen(false)
     window.location.reload()
@@ -669,21 +688,67 @@ export function PostCard({
             <DialogTitle>Schedule Post</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
-            <label className="font-medium">Select date:</label>
-            <Calendar
-              mode="single"
-              selected={scheduledDate}
-              onSelect={setScheduledDate}
-              fromDate={new Date()}
-              className="rounded-md border"
-            />
-            <label className="font-medium">Select time:</label>
-            <Input
-              type="time"
-              value={scheduledTime}
-              onChange={(e) => setScheduledTime(e.target.value)}
-              className="w-40"
-            />
+            <label className="font-medium">Select platforms to schedule:</label>
+            <label className="flex items-center gap-2">
+              <Checkbox
+                checked={scheduleTwitter}
+                onCheckedChange={(v) => setScheduleTwitter(!!v)}
+              />
+              <span>Twitter/X</span>
+            </label>
+            {scheduleTwitter && (
+              <div className="ml-4 flex items-end gap-4">
+                <div>
+                  <label className="font-medium">Date (Twitter):</label>
+                  <Calendar
+                    mode="single"
+                    selected={scheduledDateTwitter}
+                    onSelect={setScheduledDateTwitter}
+                    fromDate={new Date()}
+                    className="rounded-md border"
+                  />
+                </div>
+                <div>
+                  <label className="font-medium">Time (Twitter):</label>
+                  <Input
+                    type="time"
+                    value={scheduledTimeTwitter}
+                    onChange={(e) => setScheduledTimeTwitter(e.target.value)}
+                    className="w-32"
+                  />
+                </div>
+              </div>
+            )}
+            <label className="flex items-center gap-2">
+              <Checkbox
+                checked={scheduleBluesky}
+                onCheckedChange={(v) => setScheduleBluesky(!!v)}
+              />
+              <span>Bluesky</span>
+            </label>
+            {scheduleBluesky && (
+              <div className="ml-4 flex items-end gap-4">
+                <div>
+                  <label className="font-medium">Date (Bluesky):</label>
+                  <Calendar
+                    mode="single"
+                    selected={scheduledDateBluesky}
+                    onSelect={setScheduledDateBluesky}
+                    fromDate={new Date()}
+                    className="rounded-md border"
+                  />
+                </div>
+                <div>
+                  <label className="font-medium">Time (Bluesky):</label>
+                  <Input
+                    type="time"
+                    value={scheduledTimeBluesky}
+                    onChange={(e) => setScheduledTimeBluesky(e.target.value)}
+                    className="w-32"
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -693,8 +758,15 @@ export function PostCard({
             </DialogClose>
             <Button
               variant="custom"
-              onClick={handleSchedule}
-              disabled={scheduling || !scheduledDate || !scheduledTime}
+              onClick={handleScheduleMulti}
+              disabled={
+                scheduling ||
+                (!scheduleTwitter && !scheduleBluesky) ||
+                (scheduleTwitter &&
+                  (!scheduledDateTwitter || !scheduledTimeTwitter)) ||
+                (scheduleBluesky &&
+                  (!scheduledDateBluesky || !scheduledTimeBluesky))
+              }
             >
               {scheduling ? "Scheduling..." : "Add to Queue"}
             </Button>
