@@ -3,7 +3,30 @@ import { currentUser } from "@clerk/nextjs/server"
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { PostCard } from "./PostCard"
+import { PostCard, type Generation, type Schedule } from "./PostCard"
+
+// Define the type for the raw Supabase response
+interface ScheduleRaw {
+  id: string
+  platform: "twitter" | "bluesky"
+  status: "queue" | "sent" | "failed"
+  scheduled_at: string
+  error_message?: string | null
+  published_post_id?: string | null
+  generation:
+    | {
+        id: string
+        response: string
+        image_url: string | null
+        created_at: string
+      }
+    | {
+        id: string
+        response: string
+        image_url: string | null
+        created_at: string
+      }[]
+}
 
 export default async function PostsPage() {
   const user = await currentUser()
@@ -27,20 +50,88 @@ export default async function PostsPage() {
   }
 
   const supabase = createServerSupabaseClient()
-  const { data: generations, error } = await supabase
+
+  // 1. Drafts: generations sin schedules activos
+  const { data: drafts, error: draftsError } = await supabase
     .from("generations")
-    .select("id, response, image_url, created_at, status, scheduled_at")
+    .select(
+      "id, response, image_url, created_at, status, scheduled_at, generations_platforms(status)"
+    )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 
-  if (error) return <div>Error loading posts: {error.message}</div>
-  if (!generations || generations.length === 0)
-    return <div>No posts found.</div>
+  // 2. Schedules: generations_platforms join generations
+  const { data: schedulesRaw, error: schedulesError } = await supabase
+    .from("generations_platforms")
+    .select(
+      "id, platform, status, scheduled_at, error_message, published_post_id, generation:generations(id, response, image_url, created_at)"
+    )
+    .eq("generation.user_id", user.id)
+    .order("scheduled_at", { ascending: false })
+
+  if (draftsError || schedulesError) return <div>Error loading posts.</div>
+
+  // Normalize schedules: ensure generation is a Generation with status
+  const schedules: Schedule[] = (schedulesRaw || []).map((s: ScheduleRaw) => {
+    let generation: Generation
+    // For scheduled posts, we want the Generation to reflect the schedule's status for UI purposes
+    if (Array.isArray(s.generation)) {
+      generation = {
+        ...s.generation[0],
+        status: s.status as Generation["status"],
+      }
+    } else {
+      generation = { ...s.generation, status: s.status as Generation["status"] }
+    }
+    return { ...s, generation }
+  })
+
+  // Drafts: solo los que no tienen schedules activos (queue, sent, failed)
+  const draftPosts: Generation[] = (drafts || [])
+    .filter(
+      (g: Generation & { generations_platforms?: { status: string }[] }) =>
+        !g.generations_platforms ||
+        g.generations_platforms.length === 0 ||
+        g.generations_platforms.every(
+          (p) => !["queue", "sent", "failed"].includes(p.status)
+        )
+    )
+    .map((g) => ({ ...g, status: "draft" as const }))
+
+  // Schedules por status y plataforma
+  const queueTwitter = schedules.filter(
+    (s) => s.status === "queue" && s.platform === "twitter"
+  )
+  const queueBluesky = schedules.filter(
+    (s) => s.status === "queue" && s.platform === "bluesky"
+  )
+  const sentTwitter = schedules.filter(
+    (s) => s.status === "sent" && s.platform === "twitter"
+  )
+  const sentBluesky = schedules.filter(
+    (s) => s.status === "sent" && s.platform === "bluesky"
+  )
+  const failedTwitter = schedules.filter(
+    (s) => s.status === "failed" && s.platform === "twitter"
+  )
+  const failedBluesky = schedules.filter(
+    (s) => s.status === "failed" && s.platform === "bluesky"
+  )
+
+  // getGenerationFromSchedule and getScheduleWithGeneration are now identity
+  function getGenerationFromSchedule(s: Schedule): Generation {
+    return s.generation
+  }
+
+  function getScheduleWithGeneration(s: Schedule): Schedule {
+    return s
+  }
 
   const statusTabs = [
     { value: "draft", label: "Drafts" },
     { value: "queue", label: "Queue" },
     { value: "sent", label: "Sent" },
+    { value: "failed", label: "Failed" },
   ]
 
   return (
@@ -60,26 +151,153 @@ export default async function PostsPage() {
             </TabsTrigger>
           ))}
         </TabsList>
-        {statusTabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value}>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {generations.filter((g) => g.status === tab.value).length ===
-                0 && (
-                <div className="text-muted-foreground">No posts found.</div>
+        <TabsContent value="draft">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {draftPosts.length === 0 && (
+              <div className="text-muted-foreground">No drafts found.</div>
+            )}
+            {draftPosts.map((gen) => (
+              <PostCard
+                key={gen.id}
+                generation={gen}
+                user={safeUser}
+                hasTwitter={hasTwitter}
+              />
+            ))}
+          </div>
+        </TabsContent>
+        <TabsContent value="queue">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div>
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-blue-500">Twitter</span>
+                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+                  {queueTwitter.length}
+                </span>
+              </div>
+              {queueTwitter.length === 0 && (
+                <div className="text-muted-foreground">No scheduled posts.</div>
               )}
-              {generations
-                .filter((g) => g.status === tab.value)
-                .map((gen) => (
-                  <PostCard
-                    key={gen.id}
-                    generation={gen}
-                    user={safeUser}
-                    hasTwitter={hasTwitter}
-                  />
-                ))}
+              {queueTwitter.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
             </div>
-          </TabsContent>
-        ))}
+            <div>
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-sky-600">Bluesky</span>
+                <span className="rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
+                  {queueBluesky.length}
+                </span>
+              </div>
+              {queueBluesky.length === 0 && (
+                <div className="text-muted-foreground">No scheduled posts.</div>
+              )}
+              {queueBluesky.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="sent">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div>
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-blue-500">Twitter</span>
+                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+                  {sentTwitter.length}
+                </span>
+              </div>
+              {sentTwitter.length === 0 && (
+                <div className="text-muted-foreground">No sent posts.</div>
+              )}
+              {sentTwitter.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
+            <div>
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-sky-600">Bluesky</span>
+                <span className="rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
+                  {sentBluesky.length}
+                </span>
+              </div>
+              {sentBluesky.length === 0 && (
+                <div className="text-muted-foreground">No sent posts.</div>
+              )}
+              {sentBluesky.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="failed">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div>
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-blue-500">Twitter</span>
+                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+                  {failedTwitter.length}
+                </span>
+              </div>
+              {failedTwitter.length === 0 && (
+                <div className="text-muted-foreground">No failed posts.</div>
+              )}
+              {failedTwitter.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
+            <div>
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-sky-600">Bluesky</span>
+                <span className="rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
+                  {failedBluesky.length}
+                </span>
+              </div>
+              {failedBluesky.length === 0 && (
+                <div className="text-muted-foreground">No failed posts.</div>
+              )}
+              {failedBluesky.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   )

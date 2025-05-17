@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import {
+  Cloud,
   Copy,
   EllipsisVertical,
   Eye,
@@ -12,11 +13,11 @@ import {
   Info,
   Pencil,
   Trash2,
+  Twitter,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -42,18 +43,27 @@ import { Input } from "@/components/ui/input"
 import {
   deleteGeneration,
   duplicateGeneration,
-  scheduleGeneration,
   scheduleGenerationMultiPlatform,
   updateGeneration,
 } from "../generator/actions"
 
-type Generation = {
+export type Generation = {
   id: string
   response: string
   image_url: string | null
   created_at: string
   status: "draft" | "queue" | "sent"
   scheduled_at?: string | null
+}
+
+export type Schedule = {
+  id: string
+  platform: "twitter" | "bluesky"
+  status: "queue" | "sent" | "failed"
+  scheduled_at: string
+  error_message?: string | null
+  published_post_id?: string | null
+  generation: Generation
 }
 
 type User = {
@@ -64,14 +74,35 @@ type User = {
   imageUrl?: string | null
 }
 
+export type PlatformStatus = {
+  platform: "twitter" | "bluesky"
+  status: "queue" | "sent" | "failed"
+  scheduled_at?: string
+  error_message?: string | null
+  published_post_id?: string | null
+}
+
+// NUEVO: Hook para obtener el estado por plataforma
+function usePlatformStatuses(generationId: string): PlatformStatus[] {
+  const [platforms, setPlatforms] = useState<PlatformStatus[]>([])
+  useEffect(() => {
+    fetch(`/api/generations/${generationId}/platforms`)
+      .then((r) => r.json())
+      .then((data) => setPlatforms(data.platforms || []))
+  }, [generationId])
+  return platforms
+}
+
 export function PostCard({
   generation,
   user,
   hasTwitter,
+  schedule,
 }: {
   generation: Generation
   user: User
   hasTwitter: boolean
+  schedule?: Schedule
 }) {
   const [open, setOpen] = useState(false)
   const [response, setResponse] = useState(generation.response)
@@ -103,6 +134,24 @@ export function PostCard({
   >()
   const [scheduledTimeBluesky, setScheduledTimeBluesky] = useState("")
   const [scheduling, setScheduling] = useState(false)
+  const [editPlatform, setEditPlatform] = useState<null | {
+    platform: string
+    scheduled_at: string
+  }>(null)
+  const [editDate, setEditDate] = useState<Date | undefined>()
+  const [editTime, setEditTime] = useState("")
+  const [editLoading, setEditLoading] = useState(false)
+  const [retryPlatform, setRetryPlatform] = useState<null | string>(null)
+  const [retryLoading, setRetryLoading] = useState(false)
+  const [cancelLoading, setCancelLoading] = useState<string | null>(null)
+
+  const platforms = usePlatformStatuses(generation.id)
+
+  // Si hay schedule, sobreescribe los datos relevantes
+  const platform = schedule?.platform
+  const scheduleStatus = schedule?.status
+  const scheduledAt = schedule?.scheduled_at
+  const errorMessage = schedule?.error_message
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -282,6 +331,87 @@ export function PostCard({
     window.location.reload()
   }
 
+  // Edit schedule logic
+  const handleEditSchedule = async () => {
+    if (!editPlatform || !editDate || !editTime) return
+    setEditLoading(true)
+    const [h, m] = editTime.split(":")
+    const d = new Date(editDate)
+    d.setHours(Number(h))
+    d.setMinutes(Number(m))
+    d.setSeconds(0)
+    d.setMilliseconds(0)
+    const res = await fetch(
+      `/api/generations/${generation.id}/platforms/schedule`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          platform: editPlatform.platform,
+          scheduled_at: d.toISOString(),
+        }),
+      }
+    )
+    setEditLoading(false)
+    setEditPlatform(null)
+    if (res.ok) {
+      toast.success("Schedule updated!")
+      window.location.reload()
+    } else {
+      toast.error("Failed to update schedule")
+    }
+  }
+
+  // Retry logic
+  const handleRetry = async (platform: string) => {
+    setRetryLoading(true)
+    const endpoint =
+      platform === "twitter"
+        ? "/api/twitter/publish"
+        : platform === "bluesky"
+          ? "/api/bluesky/publish"
+          : null
+    if (!endpoint) return
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postContent: response,
+        id: generation.id,
+        userId: user.id,
+      }),
+    })
+    setRetryLoading(false)
+    setRetryPlatform(null)
+    if (res.ok) {
+      toast.success(`Re-published to ${platform}`)
+      window.location.reload()
+    } else {
+      const data = await res.json()
+      toast.error(data.error || `Failed to re-publish to ${platform}`)
+    }
+  }
+
+  // Cancelar schedule de una plataforma (solo borra la fila de generations_platforms)
+  const handleCancelQueue = async (platform: string) => {
+    setCancelLoading(platform)
+    const res = await fetch(
+      `/api/generations/${generation.id}/platforms/cancel`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform }),
+      }
+    )
+    setCancelLoading(null)
+    if (res.ok) {
+      toast.success(`Queue cancelled for ${platform}`)
+      window.location.reload()
+    } else {
+      toast.error(`Failed to cancel queue for ${platform}`)
+    }
+  }
+
   useEffect(() => {
     if (blueskyDialogOpen) {
       setLoadingBluesky(true)
@@ -303,53 +433,101 @@ export function PostCard({
     <Card className="shadow-custom border-none">
       <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
         <div className="flex items-center gap-2">
-          <Badge className="bg-primary shadow-custom text-foreground flex items-center gap-1">
-            <Pencil className="size-3" />
-            {generation.status.charAt(0).toUpperCase() +
-              generation.status.slice(1)}
-          </Badge>
-          {generation.scheduled_at && (
-            <span className="text-muted-foreground ml-2 text-xs">
-              Scheduled:{" "}
-              {format(new Date(generation.scheduled_at), "MMM d, yyyy h:mm a")}
-            </span>
+          {/* Icono de plataforma fuera del badge */}
+          {schedule && (
+            <>
+              {platform === "twitter" && (
+                <Twitter className="mr-1 inline-block size-5 text-blue-500" />
+              )}
+              {platform === "bluesky" && (
+                <Cloud className="mr-1 inline-block size-5 text-sky-600" />
+              )}
+            </>
           )}
+          {/* Badge de status tipo "Status" */}
+          <span className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-700">
+            <span
+              className="mr-2 inline-block h-4 w-4 rounded"
+              style={{
+                backgroundColor:
+                  scheduleStatus === "failed"
+                    ? "#F43F5F"
+                    : scheduleStatus === "sent"
+                      ? "#12B981"
+                      : scheduleStatus === "queue"
+                        ? "#F97315"
+                        : "#9CA3AF", // gris para draft/otro
+              }}
+            />
+            {scheduleStatus
+              ? scheduleStatus.charAt(0).toUpperCase() + scheduleStatus.slice(1)
+              : "Draft"}
+            {scheduledAt && (
+              <span className="ml-1 text-xs text-gray-500">
+                ({format(new Date(scheduledAt), "MMM d, HH:mm")})
+              </span>
+            )}
+          </span>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <EllipsisVertical className="size-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={async () => {
-                await duplicateGeneration({
-                  id: generation.id,
-                  user_id: user.id,
-                })
-                window.location.reload()
-              }}
-            >
-              <Copy className="mr-2 size-4" /> Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={async () => {
-                await deleteGeneration(generation.id)
-                window.location.reload()
-              }}
-            >
-              <Trash2 className="mr-2 size-4" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* DropdownMenu: solo permite duplicar si todas sent/failed/draft, borrar solo si todas draft/failed */}
+        {!schedule && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <EllipsisVertical className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {/* Duplicar: solo si todas las plataformas están en sent, failed o draft */}
+              {platforms.every((p) =>
+                ["sent", "failed", "draft"].includes(p.status)
+              ) && (
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await duplicateGeneration({
+                      id: generation.id,
+                      user_id: user.id,
+                    })
+                    toast.success("Post duplicated as draft")
+                    window.location.reload()
+                  }}
+                >
+                  <Copy className="mr-2 size-4" /> Duplicate
+                </DropdownMenuItem>
+              )}
+              {/* Borrar: solo si todas draft o failed */}
+              {platforms.every((p) =>
+                ["draft", "failed"].includes(p.status)
+              ) && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={async () => {
+                      await deleteGeneration(generation.id)
+                      toast.success("Post deleted")
+                      window.location.reload()
+                    }}
+                  >
+                    <Trash2 className="mr-2 size-4" /> Delete
+                  </DropdownMenuItem>
+                </>
+              )}
+              {/* Si hay alguna sent, no permitir borrar */}
+              {platforms.some((p) => p.status === "sent") && (
+                <DropdownMenuItem disabled>
+                  <Trash2 className="mr-2 size-4" /> Cannot delete published
+                  post
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </CardHeader>
       <CardContent className="flex flex-col items-start gap-4 md:flex-row">
-        {imageUrl !== "" ? (
+        {generation.image_url !== "" ? (
           <Image
-            src={imageUrl || ""}
+            src={generation.image_url || ""}
             alt="Post image"
             width={160}
             height={90}
@@ -357,7 +535,7 @@ export function PostCard({
           />
         ) : null}
         <div className="text-foreground flex-1 whitespace-pre-wrap">
-          {response}
+          {generation.response}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-2 pt-2 md:flex-row md:items-center md:justify-between">
@@ -365,147 +543,202 @@ export function PostCard({
           Created {new Date(generation.created_at).toLocaleString()}
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!hasTwitter}
-            title={
-              !hasTwitter
-                ? "Connect your Twitter account to enable this action."
-                : undefined
-            }
-            onClick={() => setScheduleDialogOpen(true)}
-          >
-            Add to Queue
-          </Button>
-          <Button
-            variant="custom"
-            size="sm"
-            onClick={() => {
-              setPublishModalOpen(true)
-              setPublishTwitter(false)
-              setPublishBluesky(false)
-            }}
-          >
-            Publish
-          </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Pencil className="mr-1 size-4" /> Edit
+          {/* Acciones por schedule */}
+          {schedule && scheduleStatus === "queue" && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditPlatform({
+                    platform: platform || "",
+                    scheduled_at: scheduledAt || "",
+                  })
+                  setEditDate(scheduledAt ? new Date(scheduledAt) : new Date())
+                  setEditTime(
+                    scheduledAt ? format(new Date(scheduledAt), "HH:mm") : ""
+                  )
+                }}
+              >
+                Edit {platform} Schedule
               </Button>
-            </DialogTrigger>
-            <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
-              <DialogHeader>
-                <DialogTitle>Edit Draft</DialogTitle>
-              </DialogHeader>
-              <div className="mt-4 flex w-full flex-col gap-6 md:flex-row">
-                <div className="flex flex-1 flex-col gap-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Avatar>
-                      <AvatarImage
-                        src={user?.imageUrl ?? ""}
-                        alt={user?.fullName || user?.username || "User"}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleCancelQueue(platform || "")}
+                disabled={cancelLoading === platform}
+              >
+                {cancelLoading === platform
+                  ? "Cancelling..."
+                  : `Cancel ${platform}`}
+              </Button>
+            </>
+          )}
+          {schedule && scheduleStatus === "failed" && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => {
+                setRetryPlatform(platform || "")
+                handleRetry(platform || "")
+              }}
+              disabled={retryLoading && retryPlatform === platform}
+            >
+              {retryLoading && retryPlatform === platform
+                ? "Retrying..."
+                : `Retry ${platform}`}
+            </Button>
+          )}
+          {/* Acciones para drafts */}
+          {!schedule && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!hasTwitter}
+                title={
+                  !hasTwitter
+                    ? "Connect your Twitter account to enable this action."
+                    : undefined
+                }
+                onClick={() => setScheduleDialogOpen(true)}
+              >
+                Add to Queue
+              </Button>
+              <Button
+                variant="custom"
+                size="sm"
+                onClick={() => {
+                  setPublishModalOpen(true)
+                  setPublishTwitter(false)
+                  setPublishBluesky(false)
+                }}
+              >
+                Publish
+              </Button>
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Pencil className="mr-1 size-4" /> Edit
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
+                  <DialogHeader>
+                    <DialogTitle>Edit Draft</DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-4 flex w-full flex-col gap-6 md:flex-row">
+                    <div className="flex flex-1 flex-col gap-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Avatar>
+                          <AvatarImage
+                            src={user?.imageUrl ?? ""}
+                            alt={user?.fullName || user?.username || "User"}
+                          />
+                          <AvatarFallback>
+                            {user?.firstName?.[0] || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">
+                          {user?.fullName || user?.username}
+                        </span>
+                      </div>
+                      <textarea
+                        className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
+                        value={response}
+                        onChange={(e) => setResponse(e.target.value)}
                       />
-                      <AvatarFallback>
-                        {user?.firstName?.[0] || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">
-                      {user?.fullName || user?.username}
-                    </span>
-                  </div>
-                  <textarea
-                    className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
-                    value={response}
-                    onChange={(e) => setResponse(e.target.value)}
-                  />
-                  <div className="mt-2 flex items-center gap-4">
-                    {imageUrl !== "" ? (
-                      <div className="relative">
-                        <Image
-                          src={imageUrl || ""}
-                          alt="Preview"
-                          width={80}
-                          height={80}
-                          className="max-h-20 rounded border object-contain"
+                      <div className="mt-2 flex items-center gap-4">
+                        {imageUrl !== "" ? (
+                          <div className="relative">
+                            <Image
+                              src={imageUrl || ""}
+                              alt="Preview"
+                              width={80}
+                              height={80}
+                              className="max-h-20 rounded border object-contain"
+                            />
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="absolute -top-2 -right-2"
+                              onClick={() => {
+                                setImageUrl("")
+                              }}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ) : null}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageChange}
                         />
                         <Button
                           type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="absolute -top-2 -right-2"
-                          onClick={() => {
-                            setImageUrl("")
-                          }}
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
                         >
-                          ×
+                          {imageUrl !== "" ? "Change Image" : "Add Image"}
                         </Button>
                       </div>
-                    ) : null}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
+                    </div>
+                    <div className="hidden flex-1 border-l pl-6 md:block">
+                      <div className="mb-2 font-semibold">Threads Preview</div>
+                      <div className="rounded-lg border bg-white p-4">
+                        <div className="mb-2 flex items-center gap-2">
+                          <Avatar>
+                            <AvatarImage
+                              src={user?.imageUrl ?? ""}
+                              alt={user?.fullName || user?.username || "User"}
+                            />
+                            <AvatarFallback>
+                              {user?.firstName?.[0] || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">
+                            {user?.fullName || user?.username}
+                          </span>
+                          <span className="text-muted-foreground ml-2 text-xs">
+                            now
+                          </span>
+                        </div>
+                        <div className="mb-2 whitespace-pre-wrap text-gray-800">
+                          {response}
+                        </div>
+                        {imageUrl !== "" ? (
+                          <Image
+                            src={imageUrl || ""}
+                            alt="Preview"
+                            width={240}
+                            height={180}
+                            className="max-h-40 rounded border object-contain"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter className="mt-6">
+                    <DialogClose asChild>
+                      <Button variant="outline" disabled={saving}>
+                        Cancel
+                      </Button>
+                    </DialogClose>
                     <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
+                      variant="custom"
+                      onClick={handleSave}
+                      disabled={saving}
                     >
-                      {imageUrl !== "" ? "Change Image" : "Add Image"}
+                      {saving ? "Saving..." : "Save Draft"}
                     </Button>
-                  </div>
-                </div>
-                <div className="hidden flex-1 border-l pl-6 md:block">
-                  <div className="mb-2 font-semibold">Threads Preview</div>
-                  <div className="rounded-lg border bg-white p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Avatar>
-                        <AvatarImage
-                          src={user?.imageUrl ?? ""}
-                          alt={user?.fullName || user?.username || "User"}
-                        />
-                        <AvatarFallback>
-                          {user?.firstName?.[0] || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">
-                        {user?.fullName || user?.username}
-                      </span>
-                      <span className="text-muted-foreground ml-2 text-xs">
-                        now
-                      </span>
-                    </div>
-                    <div className="mb-2 whitespace-pre-wrap text-gray-800">
-                      {response}
-                    </div>
-                    {imageUrl !== "" ? (
-                      <Image
-                        src={imageUrl || ""}
-                        alt="Preview"
-                        width={240}
-                        height={180}
-                        className="max-h-40 rounded border object-contain"
-                      />
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-              <DialogFooter className="mt-6">
-                <DialogClose asChild>
-                  <Button variant="outline" disabled={saving}>
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <Button variant="custom" onClick={handleSave} disabled={saving}>
-                  {saving ? "Saving..." : "Save Draft"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
         </div>
       </CardFooter>
 
@@ -773,6 +1006,49 @@ export function PostCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Modal para editar schedule */}
+      <Dialog open={!!editPlatform} onOpenChange={() => setEditPlatform(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit {editPlatform?.platform} Schedule</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-2">
+            <label className="font-medium">Date:</label>
+            <Calendar
+              mode="single"
+              selected={editDate}
+              onSelect={setEditDate}
+              fromDate={new Date()}
+              className="rounded-md border"
+            />
+            <label className="font-medium">Time:</label>
+            <Input
+              type="time"
+              value={editTime}
+              onChange={(e) => setEditTime(e.target.value)}
+              className="w-32"
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" disabled={editLoading}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              variant="custom"
+              onClick={handleEditSchedule}
+              disabled={editLoading || !editDate || !editTime}
+            >
+              {editLoading ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Mostrar error si failed */}
+      {schedule && scheduleStatus === "failed" && errorMessage && (
+        <div className="px-4 pb-2 text-xs text-red-500">{errorMessage}</div>
+      )}
     </Card>
   )
 }
