@@ -3,6 +3,9 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 const isProtectedRoute = createRouteMatcher(["/:username(.*)"])
 
 export default clerkMiddleware(async (auth, req) => {
+  const publicRoutes = ["/", "/about", "/contact"];
+  if (publicRoutes.includes(req.nextUrl.pathname)) return;
+
   // No proteger /api/twitter/publish
   if (req.nextUrl.pathname === "/api/twitter/publish") return;
   if (req.nextUrl.pathname === "/api/bluesky/publish") return;
