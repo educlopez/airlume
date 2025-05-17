@@ -21,7 +21,7 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         custom:
-          "hover:from-sparkbites hover:to-sparkbites bg-gradient-to-b from-[#4B94FD] text-shadow-sm to-sparkbites text-white shadow-[0px_1px_2px_rgba(0,0,0,0.4),0px_0px_0px_1px_#1477F6,inset_0px_0.75px_0px_rgba(255,255,255,0.2)]",
+          "hover:from-airlume hover:to-airlume bg-gradient-to-b from-[#4B94FD] text-shadow-sm to-airlume text-white shadow-[0px_1px_2px_rgba(0,0,0,0.4),0px_0px_0px_1px_#1477F6,inset_0px_0.75px_0px_rgba(255,255,255,0.2)]",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

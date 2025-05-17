@@ -47,7 +47,7 @@ const ThemeSwitcher = () => {
           onValueChange={(e) => setTheme(e)}
         >
           <DropdownMenuRadioItem
-            className="[&_svg.lucide-circle]:fill-sparkbites data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground data-[highlighted]:shadow-custom flex cursor-pointer gap-2"
+            className="[&_svg.lucide-circle]:fill-airlume data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground data-[highlighted]:shadow-custom flex cursor-pointer gap-2"
             value="light"
           >
             <Sun size={ICON_SIZE} className="text-primary-foreground/70" />

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useClerk, useUser } from "@clerk/nextjs"
-import { EllipsisVertical, LogOut, UserCircle } from "lucide-react"
+import { EllipsisVertical, LogOut, Settings, UserCircle } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -104,7 +104,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={handleAccountClick}>
-                <UserCircle />
+                <Settings />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleAccountDialog}>

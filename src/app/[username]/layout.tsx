@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <div className="font-base text-medium bg-background selection:bg-sparkbites/10 selection:text-sparkbites h-screen w-full overflow-hidden antialiased lg:mx-auto">
+    <div className="font-base text-medium bg-background selection:bg-airlume/10 selection:text-airlume h-screen w-full overflow-hidden antialiased lg:mx-auto">
       <SidebarProvider
         style={
           {

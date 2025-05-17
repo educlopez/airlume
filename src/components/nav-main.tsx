@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 
 import {
@@ -17,6 +18,7 @@ export function NavMain({
     title: string
     url: string
     icon: React.ElementType
+    image: string
   }[]
 }) {
   return (
@@ -27,7 +29,15 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton tooltip={item.title} asChild>
                 <Link href={item.url}>
-                  {item.icon && <item.icon />}
+                  {/* {item.icon && <item.icon />} */}
+                  {item.image && (
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      width={32}
+                      height={32}
+                    />
+                  )}
                   <span>{item.title}</span>
                 </Link>
               </SidebarMenuButton>

@@ -24,7 +24,7 @@ export default function Copyright() {
                 alt="User Avatar of Eduardo Calvo"
                 width={28}
                 height={28}
-                className="shrink-0 rounded-full"
+                className="shrink-0 rounded-md"
               />
             </div>
             <p className="text-xs font-bold">Eduardo Calvo</p>

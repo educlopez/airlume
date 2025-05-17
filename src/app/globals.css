@@ -4,8 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-sparkbites: var(--sparkbites);
-  --color-sparkbites-secondary: var(--sparkbites-secondary);
+  --color-airlume: var(--airlume);
+  --color-airlume-secondary: var(--airlume-secondary);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -48,8 +48,8 @@
 }
 
 :root {
-  --sparkbites: #1477f6;
-  --sparkbites-secondary: rgba(23, 23, 23, 1);
+  --airlume: #1477f6;
+  --airlume-secondary: rgba(23, 23, 23, 1);
   --radius: 0.5rem;
   --background: oklch(98.51% 0 0);
   --foreground: oklch(21.03% 0.0059 285.89);
@@ -92,8 +92,8 @@
 }
 
 .dark {
-  --sparkbites: #1477f6;
-  --sparkbites-secondary: rgba(255, 255, 255, 1);
+  --airlume: #1477f6;
+  --airlume-secondary: rgba(255, 255, 255, 1);
   --background: oklch(21.03% 0.0059 285.89);
   --foreground: oklch(96.74% 0.0013 286.38);
   --card: oklch(21.03% 0.0059 285.89);
@@ -167,4 +167,29 @@
       var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
       var(--tw-shadow);
   }
+  .body-mask-b-0 {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 1) 0%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 1) 0%,
+      transparent 100%
+    );
+  }
+  .body-mask-t-0 {
+    -webkit-mask-image: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 1) 0%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, transparent 100%);
+  }
+}
+
+.bg-stripes {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZSURBVHgBxcghAQAAAIMw+pf+C+CZHLilebfsBfsvTewEAAAAAElFTkSuQmCC);
+  background-repeat: repeat;
 }

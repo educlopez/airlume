@@ -526,13 +526,15 @@ export function PostCard({
       </CardHeader>
       <CardContent className="flex flex-col items-start gap-4 md:flex-row">
         {generation.image_url !== "" ? (
-          <Image
-            src={generation.image_url || ""}
-            alt="Post image"
-            width={160}
-            height={90}
-            className="max-h-36 rounded border object-contain"
-          />
+          <div className="shadow-custom flex max-h-36 max-w-36 items-center justify-center overflow-hidden rounded">
+            <Image
+              src={generation.image_url || ""}
+              alt="Post image"
+              width={160}
+              height={90}
+              className="h-full w-full object-contain"
+            />
+          </div>
         ) : null}
         <div className="text-foreground flex-1 whitespace-pre-wrap">
           {generation.response}
@@ -687,7 +689,7 @@ export function PostCard({
                       </div>
                     </div>
                     <div className="hidden flex-1 border-l pl-6 md:block">
-                      <div className="mb-2 font-semibold">Threads Preview</div>
+                      <div className="mb-2 font-semibold">Post Preview</div>
                       <div className="rounded-lg border bg-white p-4">
                         <div className="mb-2 flex items-center gap-2">
                           <Avatar>
@@ -710,13 +712,15 @@ export function PostCard({
                           {response}
                         </div>
                         {imageUrl !== "" ? (
-                          <Image
-                            src={imageUrl || ""}
-                            alt="Preview"
-                            width={240}
-                            height={180}
-                            className="max-h-40 rounded border object-contain"
-                          />
+                          <div className="shadow-custom flex max-h-36 w-full items-center justify-center overflow-hidden rounded">
+                            <Image
+                              src={imageUrl || ""}
+                              alt="Preview"
+                              width={240}
+                              height={180}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
                         ) : null}
                       </div>
                     </div>
