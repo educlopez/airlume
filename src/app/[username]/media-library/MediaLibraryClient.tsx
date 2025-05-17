@@ -3,15 +3,10 @@
 import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import { AnimatePresence, motion } from "framer-motion"
-import { Check, Eye, Trash2, X, XIcon } from "lucide-react"
+import { Check, Eye, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 import { deleteImage, isImageUsed } from "./actions"
 
