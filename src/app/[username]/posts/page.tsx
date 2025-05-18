@@ -86,15 +86,16 @@ export default async function PostsPage() {
     return { ...s, generation }
   })
 
-  // Drafts: solo los que no tienen schedules activos (queue, sent, failed)
+  // Drafts: solo los que no tienen schedules activos (queue, sent, failed) Y status === 'draft'
   const draftPosts: Generation[] = (drafts || [])
     .filter(
       (g: Generation & { generations_platforms?: { status: string }[] }) =>
-        !g.generations_platforms ||
-        g.generations_platforms.length === 0 ||
-        g.generations_platforms.every(
-          (p) => !["queue", "sent", "failed"].includes(p.status)
-        )
+        g.status === "draft" &&
+        (!g.generations_platforms ||
+          g.generations_platforms.length === 0 ||
+          g.generations_platforms.every(
+            (p) => !["queue", "sent", "failed"].includes(p.status)
+          ))
     )
     .map((g) => ({ ...g, status: "draft" as const }))
 
@@ -117,6 +118,21 @@ export default async function PostsPage() {
   const failedBluesky = schedules.filter(
     (s) => s.status === "failed" && s.platform === "bluesky"
   )
+
+  // Direct-published sent posts (not in generations_platforms)
+  const directSentPosts = (drafts || []).filter(
+    (
+      g: Generation & {
+        status: string
+        generations_platforms?: { status: string }[]
+      }
+    ) =>
+      g.status === "sent" &&
+      (!g.generations_platforms || g.generations_platforms.length === 0)
+  )
+
+  // Optionally, if you want to support Bluesky direct-publish, filter by platform if you store that info
+  // For now, show all direct-published as Twitter (or adjust as needed)
 
   // getGenerationFromSchedule and getScheduleWithGeneration are now identity
   function getGenerationFromSchedule(s: Schedule): Generation {
@@ -168,9 +184,9 @@ export default async function PostsPage() {
         </TabsContent>
         <TabsContent value="queue">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div>
+            <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
-                <span className="text-blue-500">Twitter</span>
+                <span className="text-airlume">Twitter</span>
                 <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
                   {queueTwitter.length}
                 </span>
@@ -188,9 +204,9 @@ export default async function PostsPage() {
                 />
               ))}
             </div>
-            <div>
+            <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
-                <span className="text-sky-600">Bluesky</span>
+                <span className="text-airlume">Bluesky</span>
                 <span className="rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
                   {queueBluesky.length}
                 </span>
@@ -212,16 +228,17 @@ export default async function PostsPage() {
         </TabsContent>
         <TabsContent value="sent">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div>
+            <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
-                <span className="text-blue-500">Twitter</span>
+                <span className="text-airlume">Twitter</span>
                 <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
-                  {sentTwitter.length}
+                  {sentTwitter.length + directSentPosts.length}
                 </span>
               </div>
-              {sentTwitter.length === 0 && (
+              {sentTwitter.length + directSentPosts.length === 0 && (
                 <div className="text-muted-foreground">No sent posts.</div>
               )}
+              {/* Scheduled sent posts */}
               {sentTwitter.map((s) => (
                 <PostCard
                   key={s.id}
@@ -231,10 +248,19 @@ export default async function PostsPage() {
                   schedule={getScheduleWithGeneration(s)}
                 />
               ))}
+              {/* Direct-published sent posts */}
+              {directSentPosts.map((gen) => (
+                <PostCard
+                  key={gen.id}
+                  generation={gen}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                />
+              ))}
             </div>
-            <div>
+            <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
-                <span className="text-sky-600">Bluesky</span>
+                <span className="text-airlume">Bluesky</span>
                 <span className="rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
                   {sentBluesky.length}
                 </span>
@@ -256,9 +282,9 @@ export default async function PostsPage() {
         </TabsContent>
         <TabsContent value="failed">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div>
+            <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
-                <span className="text-blue-500">Twitter</span>
+                <span className="text-airlume">Twitter</span>
                 <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
                   {failedTwitter.length}
                 </span>
@@ -276,9 +302,9 @@ export default async function PostsPage() {
                 />
               ))}
             </div>
-            <div>
+            <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
-                <span className="text-sky-600">Bluesky</span>
+                <span className="text-airlume">Bluesky</span>
                 <span className="rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
                   {failedBluesky.length}
                 </span>

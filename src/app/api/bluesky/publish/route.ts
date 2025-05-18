@@ -93,14 +93,27 @@ export async function POST(req: NextRequest) {
     // Update Supabase status to 'sent' if id is provided
     if (id) {
       const supabase = supabaseAdmin;
-      const { error: updateError } = await supabase
-        .from("generations")
+      // Try to update scheduled (generations_platforms) first
+      const { data: updated, error: updateError } = await supabase
+        .from("generations_platforms")
         .update({ status: "sent" })
-        .eq("id", id)
+        .eq("generation_id", id)
+        .eq("platform", "bluesky")
         .select();
       if (updateError) {
-        console.error("Failed to update post status in Supabase:", updateError);
-        return NextResponse.json({ error: "Bluesky post sent, but failed to update status in Supabase", supabaseError: updateError.message }, { status: 500 });
+        console.error("Failed to update post status in generations_platforms:", updateError);
+        return NextResponse.json({ error: "Bluesky post sent, but failed to update status in generations_platforms", supabaseError: updateError.message }, { status: 500 });
+      }
+      // If no row was updated in generations_platforms, update generations (direct publish)
+      if (!updated || updated.length === 0) {
+        const { error: genError } = await supabase
+          .from("generations")
+          .update({ status: "sent" })
+          .eq("id", id);
+        if (genError) {
+          console.error("Failed to update post status in generations:", genError);
+          return NextResponse.json({ error: "Bluesky post sent, but failed to update status in generations", supabaseError: genError.message }, { status: 500 });
+        }
       }
     }
 

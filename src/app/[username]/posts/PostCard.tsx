@@ -482,7 +482,8 @@ export function PostCard({
             />
             {scheduleStatus
               ? scheduleStatus.charAt(0).toUpperCase() + scheduleStatus.slice(1)
-              : "Draft"}
+              : generation.status.charAt(0).toUpperCase() +
+                generation.status.slice(1)}
             {scheduledAt && (
               <span className="ml-1 text-xs text-gray-500">
                 ({format(new Date(scheduledAt), "MMM d, HH:mm")})
