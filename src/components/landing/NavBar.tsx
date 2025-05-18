@@ -40,14 +40,10 @@ export default function NavBar() {
     )
   }
 
-  if (!isSignedIn || !user) {
-    return null
-  }
-
   const userData = {
-    name: user.fullName || user.username || user.firstName || "User",
-    email: user.primaryEmailAddress?.emailAddress || "",
-    avatar: user.imageUrl || "",
+    name: user?.fullName || user?.username || user?.firstName || "User",
+    email: user?.primaryEmailAddress?.emailAddress || "",
+    avatar: user?.imageUrl || "",
   }
   const handleDashboardClick = () => {
     router.push(`/${username}`)
