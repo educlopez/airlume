@@ -140,3 +140,17 @@ export async function scheduleGenerationMultiPlatform({
   if (error) throw error;
   return { success: true };
 }
+
+export async function uploadImageToSupabase({ userId, imageFile }: { userId: string, imageFile: File }) {
+  const supabase = createServerSupabaseClient()
+  const fileExt = imageFile.name.split(".").pop()
+  const fileName = `${userId}/${Date.now()}.${fileExt}`
+  const { error: uploadError } = await supabase.storage
+    .from("images")
+    .upload(fileName, imageFile)
+  if (uploadError) throw uploadError
+  const { data: publicUrlData } = supabase.storage
+    .from("images")
+    .getPublicUrl(fileName)
+  return publicUrlData?.publicUrl || ""
+}

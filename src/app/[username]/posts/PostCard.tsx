@@ -145,6 +145,7 @@ export function PostCard({
   const [retryPlatform, setRetryPlatform] = useState<null | string>(null)
   const [retryLoading, setRetryLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   const platforms = usePlatformStatuses(generation.id)
 
@@ -158,19 +159,40 @@ export function PostCard({
     const file = e.target.files?.[0]
     if (file) {
       setImageUrl(URL.createObjectURL(file))
+      setImageFile(file)
     }
   }
 
   const handleSave = async () => {
     setSaving(true)
-    // TODO: handle image upload if imageFile is set
+    let finalImageUrl = imageUrl
+    // Si hay un archivo nuevo, subirlo a Supabase Storage usando server action
+    if (imageFile) {
+      try {
+        // uploadImageToSupabase is a server action, so we need to call it with the file and userId
+        // File objects can't be sent directly, so use a FormData or convert to base64/blob if needed
+        // For now, we use a workaround: fetch to an API route or use experimental server actions (if enabled)
+        // Here, we use a dynamic import to call the server action (works in Next.js 14+ with server actions enabled)
+        const { uploadImageToSupabase } = await import("../generator/actions")
+        finalImageUrl = await uploadImageToSupabase({
+          userId: user.id,
+          imageFile,
+        })
+      } catch (err) {
+        toast.error("Error uploading image")
+        console.log(err)
+        setSaving(false)
+        return
+      }
+    }
     await updateGeneration({
       id: generation.id,
       response,
-      image_url: imageUrl,
+      image_url: finalImageUrl ? finalImageUrl : "",
     })
     setSaving(false)
     setOpen(false)
+    router.refresh()
     // Optionally, refresh the page or mutate SWR/React Query
   }
 
