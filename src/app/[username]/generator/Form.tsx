@@ -6,6 +6,9 @@ import { useUser } from "@clerk/nextjs"
 import {
   AtSign,
   CheckCircle,
+  Copy,
+  Eye,
+  EyeOff,
   FileText,
   Hash,
   Info,
@@ -240,8 +243,8 @@ export default function GeneratorForm({ userId }: { userId: string }) {
     navigator.clipboard.writeText(editedResponse)
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSave(e?: React.FormEvent) {
+    if (e && typeof e.preventDefault === "function") e.preventDefault()
     setSaveStatus(null)
     startTransition(async () => {
       try {
@@ -259,8 +262,10 @@ export default function GeneratorForm({ userId }: { userId: string }) {
           imageFile: imageFile || undefined,
         })
         setSaveStatus("Saved!")
+        toast.success("Post Saved!")
       } catch {
         setSaveStatus("Failed to save")
+        toast.error("Failed to save the post")
       }
     })
   }
@@ -319,11 +324,11 @@ export default function GeneratorForm({ userId }: { userId: string }) {
     handleCopy()
   }
   function handleSaveNoArgs() {
-    handleSave({} as unknown as React.FormEvent)
+    handleSave()
   }
 
   return (
-    <div className="relative mx-auto flex h-[90vh] w-full flex-row gap-8">
+    <div className="relative mx-auto flex h-[90vh] w-full flex-col gap-8 md:flex-row">
       {/* Columna izquierda: contenido central */}
       <div className="relative flex flex-1 flex-col items-center">
         {/* Card de API Key centrada arriba */}
@@ -362,24 +367,31 @@ export default function GeneratorForm({ userId }: { userId: string }) {
               className="flex flex-row gap-2 md:items-center md:gap-4"
               onSubmit={handleSaveKey}
             >
-              <Input
-                type={showKey ? "text" : "password"}
-                value={keyInput}
-                onChange={(e) => setKeyInput(e.target.value)}
-                placeholder="sk-..."
-                autoComplete="off"
-                disabled={keyActionLoading}
-              />
+              <div className="flex w-full max-w-sm items-center space-x-0">
+                <Input
+                  type={showKey ? "text" : "password"}
+                  value={keyInput}
+                  onChange={(e) => setKeyInput(e.target.value)}
+                  placeholder="sk-..."
+                  autoComplete="off"
+                  disabled={keyActionLoading}
+                  className="rounded-tr-none rounded-br-none"
+                />
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowKey((v) => !v)}
-                tabIndex={-1}
-                size="sm"
-              >
-                {showKey ? "Hide" : "Show"}
-              </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-tl-none rounded-bl-none"
+                  onClick={() => setShowKey((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showKey ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </Button>
+              </div>
               <Button
                 type="submit"
                 variant="custom"
@@ -541,7 +553,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
           )}
         </Card>
         {/* Barra de acciones inferior fixed respecto al contenido */}
-        <div className="absolute bottom-2 left-1/2 w-full max-w-xl -translate-x-1/2">
+        <div className="relative bottom-2 left-1/2 my-4 w-full max-w-xl -translate-x-1/2 md:absolute">
           <form
             onSubmit={handleGenerate}
             className="shadow-custom bg-background flex flex-col items-end gap-2 rounded-xl border border-none p-4"
@@ -553,7 +565,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
               placeholder="Write about your post..."
               required
             />
-            <div className="flex w-full flex-row items-center gap-2">
+            <div className="flex w-full flex-col gap-2 md:flex-row md:items-center">
               <Select
                 value={model}
                 onValueChange={setModel}
@@ -644,31 +656,34 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                   </DialogClose>
                 </DialogContent>
               </Dialog>
-              <Button
-                type="submit"
-                variant="custom"
-                disabled={!isFormValid || loading}
-                className="flex items-center justify-center"
-              >
-                {loading && <span className="mr-2 animate-spin">⏳</span>}
-                {loading ? "Generating..." : "Generate"}
-              </Button>
-              {editedResponse && (
+              {/* On mobile: show Generate if no post, Save if post exists */}
+              {!editedResponse ? (
+                <Button
+                  type="submit"
+                  variant="custom"
+                  disabled={!isFormValid || loading}
+                  className="flex w-full items-center justify-center md:order-last md:block md:w-auto"
+                >
+                  {loading && <span className="mr-2 animate-spin">⏳</span>}
+                  {loading ? "Generating..." : "Generate"}
+                </Button>
+              ) : (
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={handleSave}
+                  variant="custom"
+                  onClick={handleSaveNoArgs}
                   disabled={isPending}
+                  className="flex w-full items-center justify-center md:hidden"
                 >
-                  {isPending ? "Saving..." : "Save"}
+                  {isPending ? "Saving..." : "Save Post"}
                 </Button>
               )}
             </div>
           </form>
         </div>
       </div>
-      {/* Columna derecha: panel de métricas */}
-      <div className="relative top-0 right-0 hidden h-full w-96 md:block">
+      {/* Columna derecha: panel de métricas (desktop) */}
+      <div className="relative top-0 right-0 h-full w-full md:w-96">
         <Card className="shadow-custom flex h-full w-full flex-col overflow-y-auto border-none p-4">
           {editedResponse ? (
             <MetricsPanel
@@ -678,6 +693,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
               isPending={isPending}
               response={editedResponse}
               saveStatus={saveStatus}
+              showSaveButton={true}
             />
           ) : (
             <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center px-4 text-center">
@@ -710,6 +726,7 @@ function MetricsPanel({
   isPending,
   response,
   saveStatus,
+  showSaveButton = false,
 }: {
   metrics: ReturnType<typeof getTweetMetrics>
   onCopy: () => void
@@ -717,6 +734,7 @@ function MetricsPanel({
   isPending: boolean
   response: string
   saveStatus: string | null
+  showSaveButton?: boolean
 }) {
   const scoreColor =
     metrics.score > 80
@@ -821,17 +839,20 @@ function MetricsPanel({
           onClick={() => onCopy()}
           disabled={!response}
         >
-          Copy
+          <Copy className="mr-2 size-4" /> Copy Post
         </Button>
-        <Button
-          type="button"
-          variant="custom"
-          size="sm"
-          onClick={() => onSave()}
-          disabled={isPending}
-        >
-          {isPending ? "Saving..." : "Save"}
-        </Button>
+        {showSaveButton && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onSave}
+            disabled={isPending}
+            className="hidden md:block"
+          >
+            {isPending ? "Saving..." : "Save"}
+          </Button>
+        )}
       </div>
       {saveStatus && (
         <div className="mt-1 text-xs text-green-600">{saveStatus}</div>
