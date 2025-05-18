@@ -1,8 +1,29 @@
+
 import { NextRequest } from "next/server"
 import { createOpenAI } from "@ai-sdk/openai"
 import { streamText } from "ai"
+import { auth } from "@clerk/nextjs/server"
+import { createServerSupabaseClient } from "@/lib/supabaseClient"
+import crypto from "crypto"
 
-export const runtime = "edge"
+const ALGO = "aes-256-gcm"
+const IV_LENGTH = 12
+const KEY = process.env.OPENAI_SECRET_KEY
+if (!KEY || KEY.length !== 32) throw new Error("OPENAI_SECRET_KEY must be 32 chars")
+
+function decrypt(enc: string): string {
+  const b = Buffer.from(enc, "base64")
+  const iv = b.slice(0, IV_LENGTH)
+  const tag = b.slice(IV_LENGTH, IV_LENGTH + 16)
+  const encrypted = b.slice(IV_LENGTH + 16)
+  const decipher = crypto.createDecipheriv(ALGO, Buffer.from(KEY as string), iv)
+  decipher.setAuthTag(tag)
+  let decrypted = decipher.update(encrypted)
+  decrypted = Buffer.concat([decrypted, decipher.final()])
+  return decrypted.toString("utf8")
+}
+
+export const runtime = "nodejs"
 
 function isErrorWithMessage(err: unknown): err is { message: string } {
   return (
@@ -27,10 +48,28 @@ export async function POST(req: NextRequest) {
       topP,
     } = await req.json()
 
-    // Use env key in development, otherwise use user-provided key
-    const isDev = process.env.NODE_ENV === "development"
-    const envApiKey = process.env.OPENAI_KEY
-    const apiKey = isDev && envApiKey ? envApiKey : userApiKey
+    let apiKey = userApiKey
+    // Si el usuario está autenticado, intenta buscar clave guardada
+    const { userId } = await auth()
+    if (userId) {
+      const supabase = createServerSupabaseClient()
+      const { data } = await supabase
+        .from("user_openai_keys")
+        .select("openai_key_encrypted")
+        .eq("user_id", userId)
+        .single()
+      if (data && data.openai_key_encrypted) {
+        try {
+          apiKey = decrypt(data.openai_key_encrypted)
+        } catch {
+          // Si falla la desencriptación, sigue con la clave manual/env
+        }
+      }
+    }
+    // Usa la del ENV solo si no hay ninguna otra
+    if (!apiKey && process.env.OPENAI_KEY) {
+      apiKey = process.env.OPENAI_KEY
+    }
 
     if (!prompt || !apiKey) {
       return new Response(
@@ -71,10 +110,9 @@ export async function POST(req: NextRequest) {
 
 export async function OPTIONS() {
   // Used by the generator page to detect if the local OpenAI key is set
-  const isDev = process.env.NODE_ENV === "development"
   const envApiKey = process.env.OPENAI_KEY
   return new Response(
-    JSON.stringify({ hasLocalApiKey: Boolean(isDev && envApiKey) }),
+    JSON.stringify({ hasLocalApiKey: Boolean(envApiKey) }),
     { status: 200, headers: { "Content-Type": "application/json" } }
   )
 }

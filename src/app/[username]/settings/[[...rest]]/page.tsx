@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [hasBluesky, setHasBluesky] = useState(false)
   const [showBlueskyPassword, setShowBlueskyPassword] = useState(false)
   const [loadingBluesky, setLoadingBluesky] = useState(false)
+  const [last4, setLast4] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchKeyStatus() {
@@ -30,8 +31,10 @@ export default function SettingsPage() {
         const res = await fetch("/api/user-openai-key")
         const data = await res.json()
         setHasKey(Boolean(data.hasKey))
+        setLast4(data.last4 || null)
       } catch {
         setHasKey(false)
+        setLast4(null)
       } finally {
         setLoading(false)
       }
@@ -170,6 +173,11 @@ export default function SettingsPage() {
             <div className="text-green-700">
               Your own OpenAI API key is set. You can use all models in the
               generator.
+              {last4 && (
+                <span className="ml-2 text-gray-500">
+                  (ends in <b>{last4}</b>)
+                </span>
+              )}
             </div>
             <Button
               variant="destructive"

@@ -525,14 +525,14 @@ export function PostCard({
         )}
       </CardHeader>
       <CardContent className="flex flex-col items-start gap-4 md:flex-row">
-        {generation.image_url !== "" ? (
+        {generation.image_url ? (
           <div className="shadow-custom flex max-h-36 max-w-36 items-center justify-center overflow-hidden rounded">
             <Image
-              src={generation.image_url || ""}
+              src={generation.image_url}
               alt="Post image"
               width={160}
-              height={90}
-              className="h-full w-full object-contain"
+              height={160}
+              className="object-cover"
             />
           </div>
         ) : null}

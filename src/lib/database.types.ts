@@ -15,29 +15,73 @@ export type Database = {
           id: string
           image_url: string | null
           response: string
+          scheduled_at: string | null
           status: Database["public"]["Enums"]["generation_status"]
           user_id: string
-          scheduled_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           image_url?: string | null
           response: string
+          scheduled_at?: string | null
           status?: Database["public"]["Enums"]["generation_status"]
           user_id?: string
-          scheduled_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           image_url?: string | null
           response?: string
+          scheduled_at?: string | null
           status?: Database["public"]["Enums"]["generation_status"]
           user_id?: string
-          scheduled_at?: string | null
         }
         Relationships: []
+      }
+      generations_platforms: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          generation_id: string | null
+          id: string
+          platform: string
+          published_post_id: string | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          generation_id?: string | null
+          id?: string
+          platform: string
+          published_post_id?: string | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          generation_id?: string | null
+          id?: string
+          platform?: string
+          published_post_id?: string | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generations_platforms_generation_id_fkey"
+            columns: ["generation_id"]
+            isOneToOne: false
+            referencedRelation: "generations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       twitter_tokens: {
         Row: {
@@ -65,6 +109,33 @@ export type Database = {
           oauth_token_secret?: string
           screen_name?: string | null
           twitter_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_bluesky_accounts: {
+        Row: {
+          app_password_encrypted: string
+          created_at: string | null
+          extra_info: Json | null
+          handle: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          app_password_encrypted: string
+          created_at?: string | null
+          extra_info?: Json | null
+          handle: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          app_password_encrypted?: string
+          created_at?: string | null
+          extra_info?: Json | null
+          handle?: string
+          id?: string
           user_id?: string
         }
         Relationships: []
