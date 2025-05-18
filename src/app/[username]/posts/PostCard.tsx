@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import {
@@ -116,7 +117,7 @@ export function PostCard({
   const [imageAlt, setImageAlt] = useState("")
   const [publishingBluesky, setPublishingBluesky] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [loadingBluesky, setLoadingBluesky] = useState(false)
+  const [loadingBluesky] = useState(false)
   const [hasBluesky, setHasBluesky] = useState(false)
   const [publishModalOpen, setPublishModalOpen] = useState(false)
   const [publishTwitter, setPublishTwitter] = useState(false)
@@ -413,21 +414,19 @@ export function PostCard({
   }
 
   useEffect(() => {
-    if (blueskyDialogOpen) {
-      setLoadingBluesky(true)
-      fetch("/api/bluesky")
-        .then((r) => r.json())
-        .then((data) => {
-          if (data && data.handle) {
-            setBlueskyHandle(data.handle)
-            setHasBluesky(true)
-          } else {
-            setHasBluesky(false)
-          }
-        })
-        .finally(() => setLoadingBluesky(false))
-    }
-  }, [blueskyDialogOpen])
+    // Check Bluesky connection on mount
+    fetch("/api/bluesky")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.handle) {
+          setBlueskyHandle(data.handle)
+          setHasBluesky(true)
+        } else {
+          setHasBluesky(false)
+        }
+      })
+      .catch(() => setHasBluesky(false))
+  }, [])
 
   return (
     <Card className="shadow-custom border-none">
@@ -769,8 +768,25 @@ export function PostCard({
               <Checkbox
                 checked={publishBluesky}
                 onCheckedChange={(v) => setPublishBluesky(!!v)}
+                disabled={!hasBluesky}
               />
               <span>Bluesky</span>
+              {!hasBluesky && (
+                <span className="ml-2 text-xs text-gray-500">
+                  Connect your Bluesky account in
+                  <Link
+                    href={
+                      user?.username
+                        ? `/${user.username}/settings`
+                        : "/settings"
+                    }
+                    className="text-airlume ml-1 underline"
+                  >
+                    Settings
+                  </Link>{" "}
+                  to enable this option.
+                </span>
+              )}
             </label>
           </div>
           <DialogFooter>
@@ -960,8 +976,25 @@ export function PostCard({
               <Checkbox
                 checked={scheduleBluesky}
                 onCheckedChange={(v) => setScheduleBluesky(!!v)}
+                disabled={!hasBluesky}
               />
               <span>Bluesky</span>
+              {!hasBluesky && (
+                <span className="ml-2 text-xs text-gray-500">
+                  Connect your Bluesky account in
+                  <Link
+                    href={
+                      user?.username
+                        ? `/${user.username}/settings`
+                        : "/settings"
+                    }
+                    className="text-airlume ml-1 underline"
+                  >
+                    Settings
+                  </Link>{" "}
+                  to enable this option.
+                </span>
+              )}
             </label>
             {scheduleBluesky && (
               <div className="ml-4 flex items-end gap-4">
