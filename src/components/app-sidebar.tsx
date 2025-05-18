@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import dashboardIcon from "@/assets/images/dashboard.png"
 import generateIcon from "@/assets/images/generate.png"
 import mediaIcon from "@/assets/images/media.png"
@@ -22,6 +23,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
+import Logo from "./logo"
 import { Separator } from "./ui/separator"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -66,9 +68,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href={`/${username}`}>
-                <span className="text-base font-semibold">Airlume</span>
-              </a>
+              <Link
+                href={`/${username}`}
+                className="flex w-full items-start justify-start"
+              >
+                <Logo className="!size-full max-h-24" />
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

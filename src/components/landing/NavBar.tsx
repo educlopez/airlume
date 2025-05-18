@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { UserProfileDialog } from "@/components/UserProfileDialog"
 
+import Logo from "../logo"
+
 export default function NavBar() {
   const { user, isLoaded, isSignedIn } = useUser()
   const username = user?.username || "dashboard"
@@ -64,10 +66,7 @@ export default function NavBar() {
     <header className="shadow-custom fixed top-5 left-1/2 z-50 w-auto -translate-x-1/2 rounded-full bg-white">
       <div className="mx-auto flex items-center justify-between gap-10 px-8 py-4">
         <div className="flex items-center gap-3">
-          <Image src="/logo.svg" alt="Airlume" width={36} height={36} />
-          <span className="text-2xl font-bold tracking-tight text-neutral-900">
-            Airlume
-          </span>
+          <Logo className="text-airlume h-8 w-auto" />
         </div>
         <nav className="hidden gap-10 text-base font-medium text-neutral-700 md:flex">
           <Link href="#features" className="transition hover:text-black">
