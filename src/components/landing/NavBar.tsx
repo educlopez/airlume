@@ -13,6 +13,7 @@ import {
 } from "@clerk/nextjs"
 import { LayoutDashboard, LogOut, Settings, UserCircle } from "lucide-react"
 
+import { ThemeSwitcher } from "@/components/theme-switcher"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -62,26 +63,39 @@ export default function NavBar() {
   }
 
   return (
-    <header className="shadow-custom fixed top-5 left-1/2 z-50 w-auto -translate-x-1/2 rounded-full bg-white">
-      <div className="mx-auto flex items-center justify-between gap-10 px-8 py-4">
+    <header className="shadow-custom bg-background text-foreground fixed top-5 left-1/2 z-50 inline-flex -translate-x-1/2 rounded-full">
+      <div className="flex items-center justify-between gap-10 px-8 py-4">
         <div className="flex items-center gap-3">
-          <Logo className="text-airlume h-8 w-auto" />
+          <Logo className="h-8 w-auto" />
         </div>
-        <nav className="hidden gap-10 text-base font-medium text-neutral-700 md:flex">
-          <Link href="#features" className="transition hover:text-black">
+        <nav className="text-foreground/70 hidden items-center justify-center gap-10 text-base font-medium md:flex">
+          <Link
+            href="#features"
+            className="hover:text-foreground flex items-center justify-center transition"
+          >
             Features
           </Link>
-          <Link href="#services" className="transition hover:text-black">
+          <Link
+            href="#services"
+            className="hover:text-foreground flex items-center justify-center transition"
+          >
             Services
           </Link>
-          <Link href="#about" className="transition hover:text-black">
+          <Link
+            href="#about"
+            className="hover:text-foreground flex items-center justify-center transition"
+          >
             About Us
           </Link>
-          <Link href="#faq" className="transition hover:text-black">
+          <Link
+            href="#faq"
+            className="hover:text-foreground flex items-center justify-center transition"
+          >
             FAQ
           </Link>
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeSwitcher />
           <SignedOut>
             <SignInButton>
               <Button variant="custom">Sign in</Button>
@@ -128,7 +142,7 @@ export default function NavBar() {
                           <span className="truncate font-medium">
                             {userData.name}
                           </span>
-                          <span className="text-muted-foreground truncate text-xs">
+                          <span className="text-foreground/70 truncate text-xs">
                             {userData.email}
                           </span>
                         </div>
@@ -158,7 +172,7 @@ export default function NavBar() {
                 </DropdownMenu>
               </>
             ) : (
-              <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
+              <div className="bg-primary/10 h-8 w-8 animate-pulse rounded-full" />
             )}
           </SignedIn>
         </div>
