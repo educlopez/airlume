@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react"
 import Image from "next/image"
 import { useUser } from "@clerk/nextjs"
 import {
+  Atom,
   AtSign,
   CheckCircle,
   Copy,
@@ -14,10 +15,13 @@ import {
   Info,
   Link as LinkIcon,
   List,
+  Pencil,
+  Save,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
+import Loading from "@/components/icons/loading"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -334,97 +338,115 @@ export default function GeneratorForm({ userId }: { userId: string }) {
     handleSave()
   }
 
+  // Extracted OpenAI API Key Card as a function for modal use
+  function OpenAIApiKeyCard() {
+    return (
+      <Card className="flex w-full flex-col items-start gap-6 border-none p-4 shadow-none">
+        <div className="font-semibold">OpenAI API Key</div>
+        <div className="text-foreground/70 text-xs">
+          To unlock more models for content generation, add your own OpenAI API
+          key.
+        </div>
+        {hasUserKey && !editMode ? (
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+            <div className="text-sm text-green-700">
+              Your OpenAI API key is set. All models are available.
+            </div>
+            <div className="mt-2 flex gap-2 md:mt-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditMode(true)}
+                disabled={keyActionLoading}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteKey}
+                disabled={keyActionLoading}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form
+            className="flex flex-row gap-2 md:items-center md:gap-4"
+            onSubmit={handleSaveKey}
+          >
+            <div className="flex w-full max-w-sm items-center space-x-0">
+              <Input
+                type={showKey ? "text" : "password"}
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="sk-..."
+                autoComplete="off"
+                disabled={keyActionLoading}
+                className="rounded-tr-none rounded-br-none"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-tl-none rounded-bl-none"
+                onClick={() => setShowKey((v) => !v)}
+                tabIndex={-1}
+              >
+                {showKey ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </Button>
+            </div>
+            <Button
+              type="submit"
+              variant="custom"
+              size="sm"
+              disabled={keyActionLoading || !keyInput.startsWith("sk-")}
+            >
+              <Save className="size-4" /> Save
+            </Button>
+            {hasUserKey && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setEditMode(false)}
+                disabled={keyActionLoading}
+              >
+                Cancel
+              </Button>
+            )}
+          </form>
+        )}
+        {keyError && (
+          <div className="mt-1 text-xs text-red-500">{keyError}</div>
+        )}
+      </Card>
+    )
+  }
+
   return (
     <div className="relative mx-auto flex h-[90vh] w-full flex-col gap-8 md:flex-row">
       {/* Columna izquierda: contenido central */}
       <div className="relative flex flex-1 flex-col items-center">
-        {/* Card de API Key centrada arriba */}
-        <Card className="shadow-custom mb-6 flex w-full max-w-lg flex-col items-start gap-6 border-none p-4">
-          <div className="font-semibold">OpenAI API Key</div>
-          <div className="text-foreground/70 text-xs">
-            To unlock more models for content generation, add your own OpenAI
-            API key.
-          </div>
-          {hasUserKey && !editMode ? (
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
-              <div className="text-sm text-green-700">
-                Your OpenAI API key is set. All models are available.
-              </div>
-              <div className="mt-2 flex gap-2 md:mt-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditMode(true)}
-                  disabled={keyActionLoading}
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDeleteKey}
-                  disabled={keyActionLoading}
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <form
-              className="flex flex-row gap-2 md:items-center md:gap-4"
-              onSubmit={handleSaveKey}
+        {/* OpenAI API Key Modal Trigger and Modal */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="mb-4 w-full max-w-lg"
             >
-              <div className="flex w-full max-w-sm items-center space-x-0">
-                <Input
-                  type={showKey ? "text" : "password"}
-                  value={keyInput}
-                  onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder="sk-..."
-                  autoComplete="off"
-                  disabled={keyActionLoading}
-                  className="rounded-tr-none rounded-br-none"
-                />
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-tl-none rounded-bl-none"
-                  onClick={() => setShowKey((v) => !v)}
-                  tabIndex={-1}
-                >
-                  {showKey ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
-                </Button>
-              </div>
-              <Button
-                type="submit"
-                variant="custom"
-                size="sm"
-                disabled={keyActionLoading || !keyInput.startsWith("sk-")}
-              >
-                Save
-              </Button>
-
-              {hasUserKey && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditMode(false)}
-                  disabled={keyActionLoading}
-                >
-                  Cancel
-                </Button>
-              )}
-            </form>
-          )}
-          {keyError && (
-            <div className="mt-1 text-xs text-red-500">{keyError}</div>
-          )}
-        </Card>
+              Manage OpenAI API Key
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="w-full max-w-lg">
+            <OpenAIApiKeyCard />
+          </DialogContent>
+        </Dialog>
         {/* Área central con Card y tweet generado o placeholder */}
         <Card className="shadow-custom flex w-full max-w-lg flex-col items-center gap-6 border-none p-8">
           {editedResponse ? (
@@ -444,7 +466,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                   {isEditingResponse ? (
                     <>
                       <Textarea
-                        className="min-h-[80px] w-full border p-2 text-lg focus:border-blue-400 focus:ring focus:outline-none"
+                        className="bg-primary shadow-custom min-h-[80px] w-full border p-2 text-lg focus:border-blue-400 focus:ring focus:outline-none"
                         value={draftEditedResponse}
                         onChange={(e) => setDraftEditedResponse(e.target.value)}
                         autoFocus
@@ -459,11 +481,11 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                             setIsEditingResponse(false)
                           }}
                         >
-                          Save
+                          <Save className="size-4" /> Save
                         </Button>
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="destructive"
                           size="sm"
                           onClick={() => {
                             setIsEditingResponse(false)
@@ -475,27 +497,28 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                       </div>
                     </>
                   ) : (
-                    <>
-                      {editedResponse}
+                    <div className="flex flex-col items-start justify-start gap-2">
+                      <div className="shadow-custom bg-primary rounded-lg p-2">
+                        {editedResponse}
+                      </div>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="custom"
                         size="sm"
-                        className="ml-2 px-2 py-1 text-xs"
                         onClick={() => {
                           setIsEditingResponse(true)
                           setDraftEditedResponse(editedResponse)
                         }}
                       >
-                        Edit
+                        <Pencil className="size-4" /> Edit Post
                       </Button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-muted-foreground w-full py-12 text-center text-lg">
+            <div className="text-foreground/70 w-full py-12 text-center text-lg">
               Your generated post will appear here. Write a prompt below and
               click Generate!
             </div>
@@ -725,9 +748,13 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                   type="submit"
                   variant="custom"
                   disabled={!isFormValid || loading}
-                  className="flex w-full items-center justify-center md:order-last md:block md:w-auto"
+                  className="flex w-full items-center justify-center md:order-last md:flex md:w-auto"
                 >
-                  {loading && <span className="mr-2 animate-spin">⏳</span>}
+                  {loading ? (
+                    <Loading className="size-4" />
+                  ) : (
+                    <Atom className="size-4" />
+                  )}
                   {loading ? "Generating..." : "Generate"}
                 </Button>
               ) : (
@@ -738,6 +765,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                   disabled={isPending}
                   className="flex w-full items-center justify-center md:hidden"
                 >
+                  <Save className="size-4" />{" "}
                   {isPending ? "Saving..." : "Save Post"}
                 </Button>
               )}
@@ -902,18 +930,18 @@ function MetricsPanel({
           onClick={() => onCopy()}
           disabled={!response}
         >
-          <Copy className="mr-2 size-4" /> Copy Post
+          <Copy className="size-4" /> Copy Post
         </Button>
         {showSaveButton && (
           <Button
             type="button"
-            variant="outline"
+            variant="custom"
             size="sm"
             onClick={onSave}
             disabled={isPending}
-            className="hidden md:block"
+            className="hidden md:flex"
           >
-            {isPending ? "Saving..." : "Save"}
+            <Save className="size-4" /> {isPending ? "Saving..." : "Save Post"}
           </Button>
         )}
       </div>
