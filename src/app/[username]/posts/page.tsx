@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { currentUser } from "@clerk/nextjs/server"
 
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
@@ -6,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import MediaLibraryPickerButton from "./MediaLibraryPickerButton"
 import { PostCard, type Generation, type Schedule } from "./PostCard"
 
+export const metadata: Metadata = {
+  title: "Posts",
+}
 // Define the type for the raw Supabase response
 interface ScheduleRaw {
   id: string

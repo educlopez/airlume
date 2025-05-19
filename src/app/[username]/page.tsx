@@ -1,4 +1,5 @@
 import React from "react"
+import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { currentUser } from "@clerk/nextjs/server"
@@ -11,6 +12,9 @@ import BlueskyPromoImage from "@/components/ui/BlueskyPromoImage"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
+export const metadata: Metadata = {
+  title: "Dashboard",
+}
 // Types for scheduled post rows
 // Local type for gallery files
 type GalleryFile = {

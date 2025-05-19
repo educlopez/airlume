@@ -1,10 +1,13 @@
+import type { Metadata } from "next"
 import { auth } from "@clerk/nextjs/server"
 
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
 
 import MediaLibraryClient from "./MediaLibraryClient"
 
-// Media Library page: Lists user's images from Supabase storage and allows deletion. Uses server-side data fetching and a client component for interactivity.
+export const metadata: Metadata = {
+  title: "Media Library",
+}
 
 export default async function MediaLibraryPage() {
   const { userId } = await auth()
