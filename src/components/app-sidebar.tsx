@@ -32,7 +32,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const navMain = [
     {
-      title: "Dashboard",
+      title: "Home",
       url: `/${username}`,
       icon: LayoutDashboard,
       image: dashboardIcon.src,
@@ -46,7 +46,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ]
   const navDocuments = [
     {
-      title: "Posts",
+      title: "Post Scheduler",
       url: `/${username}/posts`,
       icon: Pencil,
       image: postIcon.src,

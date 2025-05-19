@@ -47,6 +47,7 @@ import {
   scheduleGenerationMultiPlatform,
   updateGeneration,
 } from "../generator/actions"
+import MediaLibraryPicker from "./MediaLibraryPicker"
 
 export type Generation = {
   id: string
@@ -146,6 +147,10 @@ export function PostCard({
   const [retryLoading, setRetryLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageUrlFromLibrary, setImageUrlFromLibrary] = useState<string | null>(
+    null
+  )
+  const [mediaDialogOpen, setMediaDialogOpen] = useState(false)
 
   const platforms = usePlatformStatuses(generation.id)
 
@@ -165,14 +170,9 @@ export function PostCard({
 
   const handleSave = async () => {
     setSaving(true)
-    let finalImageUrl = imageUrl
-    // Si hay un archivo nuevo, subirlo a Supabase Storage usando server action
+    let finalImageUrl = imageUrlFromLibrary ? imageUrlFromLibrary : imageUrl
     if (imageFile) {
       try {
-        // uploadImageToSupabase is a server action, so we need to call it with the file and userId
-        // File objects can't be sent directly, so use a FormData or convert to base64/blob if needed
-        // For now, we use a workaround: fetch to an API route or use experimental server actions (if enabled)
-        // Here, we use a dynamic import to call the server action (works in Next.js 14+ with server actions enabled)
         const { uploadImageToSupabase } = await import("../generator/actions")
         finalImageUrl = await uploadImageToSupabase({
           userId: user.id,
@@ -180,7 +180,7 @@ export function PostCard({
         })
       } catch (err) {
         toast.error("Error uploading image")
-        console.log(err)
+        console.error(err)
         setSaving(false)
         return
       }
@@ -193,7 +193,6 @@ export function PostCard({
     setSaving(false)
     setOpen(false)
     router.refresh()
-    // Optionally, refresh the page or mutate SWR/React Query
   }
 
   const handleMultiPublish = async () => {
@@ -672,14 +671,18 @@ export function PostCard({
                         onChange={(e) => setResponse(e.target.value)}
                       />
                       <div className="mt-2 flex items-center gap-4">
-                        {imageUrl !== "" ? (
+                        {imageUrlFromLibrary || imageUrl ? (
                           <div className="relative">
                             <Image
-                              src={imageUrl || ""}
+                              src={
+                                imageUrlFromLibrary
+                                  ? imageUrlFromLibrary
+                                  : imageUrl
+                              }
                               alt="Preview"
                               width={80}
                               height={80}
-                              className="max-h-20 rounded border object-contain"
+                              className="max-h-20 min-h-10 min-w-10 rounded border object-contain"
                             />
                             <Button
                               type="button"
@@ -688,6 +691,8 @@ export function PostCard({
                               className="absolute -top-2 -right-2"
                               onClick={() => {
                                 setImageUrl("")
+                                setImageUrlFromLibrary(null)
+                                setImageFile(null)
                               }}
                             >
                               ×
@@ -706,8 +711,28 @@ export function PostCard({
                           variant="outline"
                           onClick={() => fileInputRef.current?.click()}
                         >
-                          {imageUrl !== "" ? "Change Image" : "Add Image"}
+                          {imageUrlFromLibrary || imageUrl
+                            ? "Change Image"
+                            : "Add Image"}
                         </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setMediaDialogOpen(true)}
+                        >
+                          Choose from Media Library
+                        </Button>
+                        <MediaLibraryPicker
+                          userId={user.id}
+                          open={mediaDialogOpen}
+                          onOpenChange={setMediaDialogOpen}
+                          onSelect={(url: string) => {
+                            setImageUrlFromLibrary(url)
+                            setImageUrl("")
+                            setImageFile(null)
+                            setMediaDialogOpen(false)
+                          }}
+                        />
                       </div>
                     </div>
                     <div className="hidden flex-1 border-l pl-6 md:block">
@@ -733,10 +758,14 @@ export function PostCard({
                         <div className="mb-2 whitespace-pre-wrap text-gray-800">
                           {response}
                         </div>
-                        {imageUrl !== "" ? (
+                        {imageUrlFromLibrary || imageUrl ? (
                           <div className="shadow-custom flex max-h-36 w-full items-center justify-center overflow-hidden rounded">
                             <Image
-                              src={imageUrl || ""}
+                              src={
+                                imageUrlFromLibrary
+                                  ? imageUrlFromLibrary
+                                  : imageUrl
+                              }
                               alt="Preview"
                               width={240}
                               height={180}
