@@ -4,7 +4,6 @@ import { currentUser } from "@clerk/nextjs/server"
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import MediaLibraryPickerButton from "./MediaLibraryPickerButton"
 import { PostCard, type Generation, type Schedule } from "./PostCard"
 
 export const metadata: Metadata = {
@@ -164,7 +163,7 @@ export default async function PostsPage() {
           posts directly to X.com.
         </div>
       )}
-      <MediaLibraryPickerButton userId={safeUser.id} />
+
       <Tabs defaultValue="draft" className="w-full">
         <TabsList className="mb-6">
           {statusTabs.map((tab) => (

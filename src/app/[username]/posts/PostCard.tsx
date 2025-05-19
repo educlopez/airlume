@@ -6,7 +6,6 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import {
-  Cloud,
   Copy,
   EllipsisVertical,
   Eye,
@@ -14,10 +13,11 @@ import {
   Info,
   Pencil,
   Trash2,
-  Twitter,
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { SocialBluesky } from "@/components/icons/social-bluesky"
+import { SocialX } from "@/components/icons/social-x"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -470,24 +470,24 @@ export function PostCard({
   }, [])
 
   return (
-    <Card className="shadow-custom border-none">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
+    <Card className="shadow-custom bg-background gap-4 border-none py-4">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 px-2">
         <div className="flex items-center gap-2">
           {/* Icono de plataforma fuera del badge */}
           {schedule && (
-            <>
+            <div className="bg-airlume/10 flex items-center justify-center gap-2 rounded-full p-2">
               {platform === "twitter" && (
-                <Twitter className="mr-1 inline-block size-5 text-blue-500" />
+                <SocialX className="text-airlume size-4" />
               )}
               {platform === "bluesky" && (
-                <Cloud className="mr-1 inline-block size-5 text-sky-600" />
+                <SocialBluesky className="text-airlume size-4" />
               )}
-            </>
+            </div>
           )}
           {/* Badge de status tipo "Status" */}
-          <span className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-700">
+          <span className="shadow-custom bg-primary text-foreground inline-flex items-center rounded-lg px-2 py-0.5 text-sm font-medium">
             <span
-              className="mr-2 inline-block h-4 w-4 rounded"
+              className="mr-2 inline-block h-3 w-3 rounded"
               style={{
                 backgroundColor:
                   scheduleStatus === "failed"
@@ -495,8 +495,8 @@ export function PostCard({
                     : scheduleStatus === "sent"
                       ? "#12B981"
                       : scheduleStatus === "queue"
-                        ? "#F97315"
-                        : "#9CA3AF", // gris para draft/otro
+                        ? "#A88BFA"
+                        : "#A1A1AA",
               }}
             />
             {scheduleStatus
@@ -504,7 +504,7 @@ export function PostCard({
               : generation.status.charAt(0).toUpperCase() +
                 generation.status.slice(1)}
             {scheduledAt && (
-              <span className="ml-1 text-xs text-gray-500">
+              <span className="text-foreground/70 ml-1 text-xs">
                 ({format(new Date(scheduledAt), "MMM d, HH:mm")})
               </span>
             )}
@@ -565,7 +565,7 @@ export function PostCard({
           </DropdownMenu>
         )}
       </CardHeader>
-      <CardContent className="flex flex-col items-start gap-4 md:flex-row">
+      <CardContent className="shadow-custom bg-primary mx-2 flex flex-col items-start gap-4 rounded-lg p-2 md:flex-row">
         {generation.image_url ? (
           <div className="shadow-custom flex max-h-36 max-w-36 items-center justify-center overflow-hidden rounded">
             <Image
@@ -581,7 +581,7 @@ export function PostCard({
           {generation.response}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 pt-2 md:flex-row md:items-center md:justify-between">
+      <CardFooter className="flex flex-col gap-2 px-2 md:flex-row md:items-center md:justify-between">
         <div className="text-primary-foreground text-xs">
           Created {new Date(generation.created_at).toLocaleString()}
         </div>
@@ -761,46 +761,6 @@ export function PostCard({
                           {imageFileError}
                         </div>
                       )}
-                    </div>
-                    <div className="hidden flex-1 border-l pl-6 md:block">
-                      <div className="mb-2 font-semibold">Post Preview</div>
-                      <div className="rounded-lg border bg-white p-4">
-                        <div className="mb-2 flex items-center gap-2">
-                          <Avatar>
-                            <AvatarImage
-                              src={user?.imageUrl ?? ""}
-                              alt={user?.fullName || user?.username || "User"}
-                            />
-                            <AvatarFallback>
-                              {user?.firstName?.[0] || "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">
-                            {user?.fullName || user?.username}
-                          </span>
-                          <span className="text-muted-foreground ml-2 text-xs">
-                            now
-                          </span>
-                        </div>
-                        <div className="mb-2 whitespace-pre-wrap text-gray-800">
-                          {response}
-                        </div>
-                        {imageUrlFromLibrary || imageUrl ? (
-                          <div className="shadow-custom flex max-h-36 w-full items-center justify-center overflow-hidden rounded">
-                            <Image
-                              src={
-                                imageUrlFromLibrary
-                                  ? imageUrlFromLibrary
-                                  : imageUrl
-                              }
-                              alt="Preview"
-                              width={240}
-                              height={180}
-                              className="h-full w-full object-contain"
-                            />
-                          </div>
-                        ) : null}
-                      </div>
                     </div>
                   </div>
                   <DialogFooter className="mt-6">
