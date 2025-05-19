@@ -147,6 +147,7 @@ export function PostCard({
   const [retryLoading, setRetryLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageFileError, setImageFileError] = useState<string | null>(null)
   const [imageUrlFromLibrary, setImageUrlFromLibrary] = useState<string | null>(
     null
   )
@@ -162,9 +163,22 @@ export function PostCard({
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    // Always clear all other image states when picking a new file
+    setImageUrlFromLibrary(null)
+    setImageFileError(null)
     if (file) {
-      setImageUrl(URL.createObjectURL(file))
-      setImageFile(file)
+      if (file.size > 1024 * 1024) {
+        setImageFileError("Image must be less than 1MB.")
+        setImageFile(null)
+        setImageUrl("")
+      } else {
+        setImageUrl(URL.createObjectURL(file))
+        setImageFile(file)
+        setImageFileError(null)
+      }
+    } else {
+      setImageFile(null)
+      setImageUrl("")
     }
   }
 
@@ -174,10 +188,16 @@ export function PostCard({
     if (imageFile) {
       try {
         const { uploadImageToSupabase } = await import("../generator/actions")
-        finalImageUrl = await uploadImageToSupabase({
+        const result = await uploadImageToSupabase({
           userId: user.id,
           imageFile,
         })
+        if (typeof result === "object" && result.error) {
+          toast.error(result.error)
+          setSaving(false)
+          return
+        }
+        finalImageUrl = result as string
       } catch (err) {
         toast.error("Error uploading image")
         console.error(err)
@@ -727,13 +747,20 @@ export function PostCard({
                           open={mediaDialogOpen}
                           onOpenChange={setMediaDialogOpen}
                           onSelect={(url: string) => {
+                            // Always clear all other image states when picking from library
                             setImageUrlFromLibrary(url)
                             setImageUrl("")
                             setImageFile(null)
+                            setImageFileError(null)
                             setMediaDialogOpen(false)
                           }}
                         />
                       </div>
+                      {imageFileError && (
+                        <div className="mt-2 text-xs text-red-500">
+                          {imageFileError}
+                        </div>
+                      )}
                     </div>
                     <div className="hidden flex-1 border-l pl-6 md:block">
                       <div className="mb-2 font-semibold">Post Preview</div>
@@ -778,14 +805,17 @@ export function PostCard({
                   </div>
                   <DialogFooter className="mt-6">
                     <DialogClose asChild>
-                      <Button variant="outline" disabled={saving}>
+                      <Button
+                        variant="outline"
+                        disabled={saving || !!imageFileError}
+                      >
                         Cancel
                       </Button>
                     </DialogClose>
                     <Button
                       variant="custom"
                       onClick={handleSave}
-                      disabled={saving}
+                      disabled={saving || !!imageFileError}
                     >
                       {saving ? "Saving..." : "Save Draft"}
                     </Button>

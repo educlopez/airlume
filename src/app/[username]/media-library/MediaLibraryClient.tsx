@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import { AnimatePresence, motion } from "framer-motion"
 import { Check, Eye, Trash2, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -95,6 +96,16 @@ export default function MediaLibraryClient({
     setIsSelecting(false)
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 1024 * 1024) {
+      toast.error("Image must be less than 1MB.")
+      return
+    }
+    // ... existing upload logic ...
+  }
+
   if (!items.length)
     return (
       <div className="text-muted-foreground text-center">No images found.</div>
@@ -102,6 +113,24 @@ export default function MediaLibraryClient({
 
   return (
     <div className="relative flex h-full w-full flex-col">
+      {/* Upload button and input */}
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          id="media-upload-input"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <label htmlFor="media-upload-input">
+          <Button asChild variant="outline">
+            <span>Upload Image</span>
+          </Button>
+        </label>
+        <span className="ml-2 text-xs text-gray-500">
+          Max file size: 1MB. Larger files will be rejected.
+        </span>
+      </div>
       {/* Top bar */}
       <div className="flex justify-start gap-2">
         <motion.div

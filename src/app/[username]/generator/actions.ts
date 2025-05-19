@@ -6,6 +6,7 @@ export async function saveGeneration({
   userId,
   response,
   imageFile, // File | undefined
+  imageUrl, // string | undefined
 }: {
   userId: string
   prompt: string
@@ -18,9 +19,10 @@ export async function saveGeneration({
   topP: number
   response: string
   imageFile?: File
+  imageUrl?: string
 }) {
   const supabase = createServerSupabaseClient()
-  let imageUrl: string | null = null
+  let finalImageUrl: string | null = null
 
   if (imageFile) {
     const fileExt = imageFile.name.split(".").pop()
@@ -33,14 +35,16 @@ export async function saveGeneration({
     const { data: publicUrlData } = supabase.storage
       .from("images")
       .getPublicUrl(filePath)
-    imageUrl = publicUrlData?.publicUrl || null
+    finalImageUrl = publicUrlData?.publicUrl || null
+  } else if (imageUrl) {
+    finalImageUrl = imageUrl
   }
 
   const { error } = await supabase.from("generations").insert([
     {
       user_id: userId,
       response,
-      image_url: imageUrl,
+      image_url: finalImageUrl,
       created_at: new Date().toISOString(),
       status: 'draft',
     },
@@ -142,13 +146,17 @@ export async function scheduleGenerationMultiPlatform({
 }
 
 export async function uploadImageToSupabase({ userId, imageFile }: { userId: string, imageFile: File }) {
+  // Server-side file size validation
+  if (imageFile.size > 1024 * 1024) {
+    return { error: "Image must be less than 1MB." }
+  }
   const supabase = createServerSupabaseClient()
   const fileExt = imageFile.name.split(".").pop()
   const fileName = `${userId}/${Date.now()}.${fileExt}`
   const { error: uploadError } = await supabase.storage
     .from("images")
     .upload(fileName, imageFile)
-  if (uploadError) throw uploadError
+  if (uploadError) return { error: uploadError.message }
   const { data: publicUrlData } = supabase.storage
     .from("images")
     .getPublicUrl(fileName)

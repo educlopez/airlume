@@ -41,6 +41,7 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 
+import MediaLibraryPicker from "../posts/MediaLibraryPicker"
 import { saveGeneration } from "./actions"
 
 const ALL_MODELS = [
@@ -93,6 +94,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
   const [topP, setTopP] = useState(1)
   const [saveStatus, setSaveStatus] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageFileError, setImageFileError] = useState<string | null>(null)
   const [editedResponse, setEditedResponse] = useState("")
   const [hasUserKey, setHasUserKey] = useState<boolean | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -103,6 +105,10 @@ export default function GeneratorForm({ userId }: { userId: string }) {
   const [isDragging, setIsDragging] = useState(false)
   const [isEditingResponse, setIsEditingResponse] = useState(false)
   const [draftEditedResponse, setDraftEditedResponse] = useState("")
+  const [imageUrlFromLibrary, setImageUrlFromLibrary] = useState<string | null>(
+    null
+  )
+  const [mediaDialogOpen, setMediaDialogOpen] = useState(false)
 
   const availableModels = hasUserKey ? ALL_MODELS : NANO_MODEL
 
@@ -260,6 +266,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
           topP,
           response: editedResponse,
           imageFile: imageFile || undefined,
+          imageUrl: imageUrlFromLibrary || undefined,
         })
         setSaveStatus("Saved!")
         toast.success("Post Saved!")
@@ -513,7 +520,17 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                 e.preventDefault()
                 setIsDragging(false)
                 const file = e.dataTransfer.files?.[0]
-                if (file && file.type.startsWith("image/")) setImageFile(file)
+                setImageUrlFromLibrary(null)
+                setImageFileError(null)
+                if (file && file.type.startsWith("image/")) {
+                  if (file.size > 1024 * 1024) {
+                    setImageFileError("Image must be less than 1MB.")
+                    setImageFile(null)
+                  } else {
+                    setImageFile(file)
+                    setImageFileError(null)
+                  }
+                }
               }}
             >
               <label className="text-foreground w-full cursor-pointer text-center text-sm font-medium">
@@ -522,8 +539,18 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
+                    setImageUrlFromLibrary(null)
+                    setImageFileError(null)
                     const file = e.target.files?.[0]
-                    if (file) setImageFile(file)
+                    if (file) {
+                      if (file.size > 1024 * 1024) {
+                        setImageFileError("Image must be less than 1MB.")
+                        setImageFile(null)
+                      } else {
+                        setImageFile(file)
+                        setImageFileError(null)
+                      }
+                    }
                   }}
                   className="hidden"
                 />
@@ -531,10 +558,37 @@ export default function GeneratorForm({ userId }: { userId: string }) {
               <span className="text-foreground text-xs">
                 Drag & drop or click to select an image
               </span>
-              {imageFile && (
+              <span className="ml-2 text-xs text-gray-500">
+                Max file size: 1MB. Larger files will be rejected.
+              </span>
+              <div className="mt-2 flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMediaDialogOpen(true)}
+                >
+                  Choose from Media Library
+                </Button>
+                <MediaLibraryPicker
+                  userId={userId}
+                  open={mediaDialogOpen}
+                  onOpenChange={setMediaDialogOpen}
+                  onSelect={(url: string) => {
+                    setImageUrlFromLibrary(url)
+                    setImageFile(null)
+                    setImageFileError(null)
+                    setMediaDialogOpen(false)
+                  }}
+                />
+              </div>
+              {(imageUrlFromLibrary || imageFile) && (
                 <div className="mt-2 flex flex-col items-center gap-2">
                   <Image
-                    src={URL.createObjectURL(imageFile)}
+                    src={
+                      imageUrlFromLibrary
+                        ? imageUrlFromLibrary
+                        : URL.createObjectURL(imageFile!)
+                    }
                     alt="Preview"
                     className="max-h-40 rounded-lg border"
                     width={160}
@@ -543,10 +597,19 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                   <button
                     type="button"
                     className="text-xs text-red-500 underline"
-                    onClick={() => setImageFile(null)}
+                    onClick={() => {
+                      setImageFile(null)
+                      setImageUrlFromLibrary(null)
+                      setImageFileError(null)
+                    }}
                   >
                     Remove image
                   </button>
+                </div>
+              )}
+              {imageFileError && (
+                <div className="mt-2 text-xs text-red-500">
+                  {imageFileError}
                 </div>
               )}
             </div>
