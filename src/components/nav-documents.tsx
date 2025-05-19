@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { EllipsisVertical, Folder, Share, Trash } from "lucide-react"
 
 import {
@@ -27,7 +26,6 @@ export function NavDocuments({
     title: string
     url: string
     icon: React.ElementType
-    image: string
   }[]
 }) {
   const { isMobile } = useSidebar()
@@ -40,15 +38,7 @@ export function NavDocuments({
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton asChild>
               <a href={item.url}>
-                {/* <item.icon /> */}
-                {item.image && (
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    width={32}
-                    height={32}
-                  />
-                )}
+                <item.icon />
                 <span>{item.title}</span>
               </a>
             </SidebarMenuButton>

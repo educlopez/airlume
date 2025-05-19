@@ -144,14 +144,23 @@
   body {
     @apply bg-background text-foreground;
   }
-  .dashboard-gradient-morning {
+  /* .dashboard-gradient-morning {
     @apply bg-gradient-to-tr from-indigo-200 via-purple-200 to-amber-200;
+  } */
+  .dashboard-gradient-morning {
+    @apply to-primary via-background shadow-custom from-airlume bg-gradient-to-tr;
   }
-  .dashboard-gradient-afternoon {
+  /* .dashboard-gradient-afternoon {
     @apply bg-gradient-to-tr from-amber-200 via-sky-200 to-indigo-200;
+  } */
+  .dashboard-gradient-afternoon {
+    @apply to-primary via-background shadow-custom bg-gradient-to-tr from-amber-500;
   }
-  .dashboard-gradient-evening {
+  /* .dash .dashboard-gradient-evening {
     @apply bg-gradient-to-tr from-sky-200 via-indigo-200 to-purple-200;
+  } */
+  .dashboard-gradient-evening {
+    @apply via-background to-primary shadow-custom bg-gradient-to-tr from-indigo-500;
   }
 }
 

@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
-import { AnimatePresence, motion } from "framer-motion"
 import { Check, Eye, Trash2, X } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
