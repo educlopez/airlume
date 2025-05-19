@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Laptop, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -12,6 +11,10 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+import { LaptopMinimalCheckIcon } from "./icons/laptop-minimal-check"
+import { MoonIcon } from "./icons/moon"
+import { SunIcon } from "./icons/sun"
 
 const ThemeSwitcher = () => {
   const [mounted, setMounted] = useState(false)
@@ -31,13 +34,29 @@ const ThemeSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="p-1.5" aria-label="Toggle theme">
+        <Button
+          variant="ghost"
+          className="size-7 items-center justify-center p-1.5"
+          aria-label="Toggle theme"
+        >
           {theme === "light" ? (
-            <Sun key="light" size={ICON_SIZE} />
+            <SunIcon
+              key="light"
+              size={ICON_SIZE}
+              className="flex size-5 items-center justify-center"
+            />
           ) : theme === "dark" ? (
-            <Moon key="dark" size={ICON_SIZE} />
+            <MoonIcon
+              key="dark"
+              size={ICON_SIZE}
+              className="flex size-5 items-center justify-center"
+            />
           ) : (
-            <Laptop key="system" size={ICON_SIZE} />
+            <LaptopMinimalCheckIcon
+              key="system"
+              size={ICON_SIZE}
+              className="flex size-5 items-center justify-center"
+            />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -50,21 +69,24 @@ const ThemeSwitcher = () => {
             className="[&_svg.lucide-circle]:fill-airlume data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground data-[highlighted]:shadow-custom flex cursor-pointer gap-2"
             value="light"
           >
-            <Sun size={ICON_SIZE} className="text-primary-foreground/70" />
+            <SunIcon size={ICON_SIZE} className="text-primary-foreground/70" />
             <span>Light</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem
             className="data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground data-[highlighted]:shadow-custom flex cursor-pointer gap-2"
             value="dark"
           >
-            <Moon size={ICON_SIZE} className="text-primary-foreground/70" />
+            <MoonIcon size={ICON_SIZE} className="text-primary-foreground/70" />
             <span>Dark</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem
             className="data-[highlighted]:bg-primary data-[highlighted]:text-primary-foreground data-[highlighted]:shadow-custom flex cursor-pointer gap-2"
             value="system"
           >
-            <Laptop size={ICON_SIZE} className="text-primary-foreground/70" />
+            <LaptopMinimalCheckIcon
+              size={ICON_SIZE}
+              className="text-primary-foreground/70"
+            />
             <span>System</span>
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

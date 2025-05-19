@@ -5,7 +5,6 @@ import Link from "next/link"
 import { useUser } from "@clerk/nextjs"
 
 import Copyright from "@/components/copyright"
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -23,6 +22,7 @@ import { GalleryHorizontalEndIcon } from "./icons/gallery-horizontal-end"
 import { HomeIcon } from "./icons/home"
 import { SquarePenIcon } from "./icons/square-pen"
 import Logo from "./logo"
+import { NavGenerations } from "./nav-generations"
 import { Separator } from "./ui/separator"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -75,7 +75,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavDocuments items={navDocuments} />
+        <NavGenerations items={navDocuments} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
