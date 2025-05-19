@@ -1,6 +1,6 @@
 export default function TestimonialsSection() {
   return (
-    <section className="border-border bg-muted border-b px-4 py-28 sm:px-8">
+    <section className="bg-primary shadow-custom px-4 py-28 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <h2 className="text-foreground mb-14 text-center text-4xl font-extrabold tracking-tight">
           What our users say

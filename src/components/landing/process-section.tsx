@@ -1,7 +1,6 @@
 export default function ProcessSection() {
   return (
-    <section className="border-border bg-muted relative overflow-hidden border-b px-4 py-28 sm:px-8">
-      <div className="bg-stripes max-w-screen-minus-scrollbar pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden object-none opacity-[0.04]" />
+    <section className="bg-primary shadow-custom relative overflow-hidden px-4 py-28 sm:px-8">
       <div className="relative mx-auto max-w-5xl">
         <h2 className="text-foreground mb-14 text-center text-4xl font-extrabold tracking-tight">
           How does it work?

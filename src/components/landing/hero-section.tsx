@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 
 export default function HeroSection() {
   return (
-    <section className="border-border bg-background relative border-b px-4 py-32 sm:px-8">
+    <section className="bg-background shadow-custom relative px-4 py-32 sm:px-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-20 md:flex-row">
         <div className="flex-1">
           <div className="text-foreground/70 mb-6 text-base font-semibold tracking-wider uppercase">

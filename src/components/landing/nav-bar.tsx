@@ -71,31 +71,30 @@ export default function NavBar() {
         <nav className="text-foreground/70 hidden items-center justify-center gap-10 text-base font-medium md:flex">
           <Link
             href="#features"
-            className="hover:text-foreground flex items-center justify-center transition"
+            className="hover:text-foreground flex min-w-fit items-center justify-center transition"
           >
             Features
           </Link>
           <Link
             href="#services"
-            className="hover:text-foreground flex items-center justify-center transition"
+            className="hover:text-foreground flex min-w-fit items-center justify-center transition"
           >
             Services
           </Link>
           <Link
             href="#about"
-            className="hover:text-foreground flex items-center justify-center transition"
+            className="hover:text-foreground flex min-w-fit items-center justify-center transition"
           >
             About Us
           </Link>
           <Link
             href="#faq"
-            className="hover:text-foreground flex items-center justify-center transition"
+            className="hover:text-foreground flex min-w-fit items-center justify-center transition"
           >
             FAQ
           </Link>
         </nav>
         <div className="flex items-center gap-2">
-          <ThemeSwitcher />
           <SignedOut>
             <SignInButton>
               <Button variant="custom">Sign in</Button>
@@ -175,6 +174,7 @@ export default function NavBar() {
               <div className="bg-primary/10 h-8 w-8 animate-pulse rounded-full" />
             )}
           </SignedIn>
+          <ThemeSwitcher />
         </div>
       </div>
     </header>

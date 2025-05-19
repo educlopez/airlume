@@ -4,7 +4,7 @@ export default function ServicesSection() {
   return (
     <section
       id="services"
-      className="border-border bg-background relative overflow-hidden border-b px-4 py-28 sm:px-8"
+      className="shadow-custom bg-background relative overflow-hidden px-4 py-28 sm:px-8"
     >
       <div className="bg-stripes max-w-screen-minus-scrollbar pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden object-none opacity-[0.04]" />
       <div className="relative mx-auto max-w-6xl">
@@ -12,7 +12,7 @@ export default function ServicesSection() {
           What can you create with Airlume?
         </h2>
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
-          <div className="border-border bg-muted flex flex-col items-center rounded-3xl border p-8 text-center shadow-md transition hover:shadow-lg">
+          <div className="bg-primary shadow-custom flex flex-col items-center rounded-3xl p-8 text-center transition">
             <div className="mb-4 text-4xl">📝</div>
             <h3 className="text-foreground mb-2 text-xl font-bold">
               Blog Articles
@@ -24,7 +24,7 @@ export default function ServicesSection() {
               <a href="#features">See example</a>
             </Button>
           </div>
-          <div className="border-border bg-muted flex flex-col items-center rounded-3xl border p-8 text-center shadow-md transition hover:shadow-lg">
+          <div className="bg-primary shadow-custom flex flex-col items-center rounded-3xl p-8 text-center transition">
             <div className="mb-4 text-4xl">🐦</div>
             <h3 className="text-foreground mb-2 text-xl font-bold">
               Posts for X (Twitter)
@@ -36,7 +36,7 @@ export default function ServicesSection() {
               <a href="#features">See example</a>
             </Button>
           </div>
-          <div className="border-border bg-muted flex flex-col items-center rounded-3xl border p-8 text-center shadow-md transition hover:shadow-lg">
+          <div className="bg-primary shadow-custom flex flex-col items-center rounded-3xl p-8 text-center transition">
             <div className="mb-4 text-4xl">💼</div>
             <h3 className="text-foreground mb-2 text-xl font-bold">
               Posts for LinkedIn
@@ -48,7 +48,7 @@ export default function ServicesSection() {
               <a href="#features">See example</a>
             </Button>
           </div>
-          <div className="border-border bg-muted flex flex-col items-center rounded-3xl border p-8 text-center shadow-md transition hover:shadow-lg">
+          <div className="bg-primary shadow-custom flex flex-col items-center rounded-3xl p-8 text-center transition">
             <div className="mb-4 text-4xl">🎨</div>
             <h3 className="text-foreground mb-2 text-xl font-bold">
               AI Images
