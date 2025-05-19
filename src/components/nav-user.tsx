@@ -21,7 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { UserProfileDialog } from "@/components/UserProfileDialog"
+import { UserProfileDialog } from "@/components/user-profile-dialog"
 
 export function NavUser() {
   const { isLoaded, isSignedIn, user } = useUser()

@@ -25,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { UserProfileDialog } from "@/components/UserProfileDialog"
+import { UserProfileDialog } from "@/components/user-profile-dialog"
 
 import Logo from "../logo"
 

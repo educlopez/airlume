@@ -1,8 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server"
 
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
-import { DashboardGreeting } from "@/components/DashboardGreeting"
-import { DashboardHeaderGradient } from "@/components/DashboardHeaderGradient"
+import { DashboardGreeting } from "@/components/dashboard-greeting"
+import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 

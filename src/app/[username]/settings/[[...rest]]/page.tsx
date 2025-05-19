@@ -7,7 +7,7 @@ import { Eye, EyeOff, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { UserProfileDialog } from "@/components/UserProfileDialog"
+import { UserProfileDialog } from "@/components/user-profile-dialog"
 
 export default function SettingsPage() {
   const { user, isLoaded } = useUser()
