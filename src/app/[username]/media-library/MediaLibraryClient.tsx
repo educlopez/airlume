@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
-import { deleteImage, isImageUsed } from "./actions"
+import { deleteImage, isImageUsed, uploadImage } from "./actions"
 
 interface FileItem {
   id?: string
@@ -96,14 +96,30 @@ export default function MediaLibraryClient({
     setIsSelecting(false)
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 1024 * 1024) {
       toast.error("Image must be less than 1MB.")
       return
     }
-    // ... existing upload logic ...
+    // Upload logic
+    const res = await uploadImage({ userId, file })
+    if (res?.error) {
+      toast.error(res.error)
+      return
+    }
+    // Extract file name from URL or use file.name
+    let name = file.name
+    if (res.url) {
+      const parts = res.url.split("/")
+      name = parts[parts.length - 1]
+    }
+    setItems((prev) => [
+      { name, updated_at: new Date().toISOString() },
+      ...prev,
+    ])
+    toast.success("Image uploaded!")
   }
 
   if (!items.length)

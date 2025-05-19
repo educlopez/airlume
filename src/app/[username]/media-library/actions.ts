@@ -27,3 +27,14 @@ export async function isImageUsed({ userId, fileName }: { userId: string; fileNa
   if (error) return { error: error.message }
   return { used: !!(data && data.length > 0) }
 }
+
+export async function uploadImage({ userId, file }: { userId: string; file: File }) {
+  const supabase = createServerSupabaseClient()
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${Date.now()}.${fileExt}`
+  const filePath = `${userId}/${fileName}`
+  const { error } = await supabase.storage.from("images").upload(filePath, file)
+  if (error) return { error: error.message }
+  const { data: publicUrlData } = supabase.storage.from("images").getPublicUrl(filePath)
+  return { url: publicUrlData?.publicUrl || "" }
+}
