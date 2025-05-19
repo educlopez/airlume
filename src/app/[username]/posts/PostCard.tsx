@@ -607,7 +607,7 @@ export function PostCard({
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
+                variant="destructive"
                 onClick={() => handleCancelQueue(platform || "")}
                 disabled={cancelLoading === platform}
               >

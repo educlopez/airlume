@@ -48,7 +48,7 @@ export default function MediaLibraryPicker({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogTitle>Select an image from your library {userId}</DialogTitle>
+        <DialogTitle>Select an image from your library</DialogTitle>
         <div className="grid grid-cols-3 gap-4">
           {mediaFiles.length === 0 && (
             <div className="text-muted-foreground col-span-3 text-center">
