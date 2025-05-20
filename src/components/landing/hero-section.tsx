@@ -9,11 +9,11 @@ export default function HeroSection() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-20 md:flex-row">
         <div className="flex-1">
           <h1 className="text-foreground mb-8 text-6xl leading-tight font-extrabold tracking-tight">
-            Create irresistible content for your blog and social media with AI
+            Create irresistible content for your social media with AI
           </h1>
           <p className="text-foreground/70 mb-10 max-w-xl text-2xl leading-relaxed">
-            Airlume helps you create articles, threads, and viral posts in
-            seconds. Save time, spark your creativity, and grow your audience.
+            Airlume helps you create threads and viral posts in seconds. Save
+            time, spark your creativity, and grow your audience.
           </p>
           <div className="mb-12 flex gap-6">
             <SignUpButton>
