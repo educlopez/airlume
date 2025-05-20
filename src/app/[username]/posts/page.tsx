@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { currentUser } from "@clerk/nextjs/server"
 
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
+import { NoPosts } from "@/components/icons/no-posts"
 import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -178,7 +179,7 @@ export default async function PostsPage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {draftPosts.length === 0 && (
               <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
-                <NoScheduledPosts
+                <NoPosts
                   primaryColor="var(--color-airlume)"
                   backgroundColor="var(--color-primary)"
                   className="ml-2"
@@ -271,7 +272,7 @@ export default async function PostsPage() {
               </div>
               {sentTwitter.length + directSentPosts.length === 0 && (
                 <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
-                  <NoScheduledPosts
+                  <NoPosts
                     primaryColor="var(--color-airlume)"
                     backgroundColor="var(--color-primary)"
                     className="ml-2"
@@ -310,7 +311,7 @@ export default async function PostsPage() {
               </div>
               {sentBluesky.length === 0 && (
                 <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
-                  <NoScheduledPosts
+                  <NoPosts
                     primaryColor="var(--color-airlume)"
                     backgroundColor="var(--color-primary)"
                     className="ml-2"
@@ -343,7 +344,7 @@ export default async function PostsPage() {
               </div>
               {failedTwitter.length === 0 && (
                 <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
-                  <NoScheduledPosts
+                  <NoPosts
                     primaryColor="var(--color-airlume)"
                     backgroundColor="var(--color-primary)"
                     className="ml-2"
@@ -372,7 +373,7 @@ export default async function PostsPage() {
               </div>
               {failedBluesky.length === 0 && (
                 <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
-                  <NoScheduledPosts
+                  <NoPosts
                     primaryColor="var(--color-airlume)"
                     backgroundColor="var(--color-primary)"
                     className="ml-2"

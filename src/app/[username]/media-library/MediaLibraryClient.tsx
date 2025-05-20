@@ -6,6 +6,7 @@ import { Check, Eye, Trash2, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { toast } from "sonner"
 
+import { NotImageFound } from "@/components/icons/no-image-found"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
@@ -124,7 +125,14 @@ export default function MediaLibraryClient({
 
   if (!items.length)
     return (
-      <div className="text-muted-foreground text-center">No images found.</div>
+      <div className="flex h-full flex-col items-center justify-center">
+        <NotImageFound
+          primaryColor="var(--color-airlume)"
+          backgroundColor="var(--color-primary)"
+          className="ml-2"
+        />
+        <span className="text-muted-foreground text-sm">No images yet</span>
+      </div>
     )
 
   return (
