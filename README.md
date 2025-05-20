@@ -1,36 +1,153 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ContentPilot AI
 
-## Getting Started
+A modern AI-powered tool to generate blog articles and social media posts using smart presets, reusable prompts, and a streamlined interface.
 
-First, run the development server:
+[![Demo](https://airlume.vercel.app/)](https://airlume.vercel.app/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+![Airlume Screenshot](public/opengraph-image.jpg)
+
+---
+
+## 🚀 Demo
+
+**Live Demo:** [text-foregrohttps://airlume.vercel.app/und/70](text-foregrohttps://airlume.vercel.app/und/70)
+
+---
+
+## 🖼️ Screenshots
+
+> _Replace or add more screenshots/GIFs as needed!_
+
+![Dashboard Screenshot](public/opengraph-image.jpg)
+
+---
+
+## ✨ Features
+
+- **AI Content Generation:** Generate high-quality blog articles and social media posts using OpenAI GPT models.
+- **Smart Presets & Prompts:** Modular, reusable prompts for different content types and platforms.
+- **User Dashboard:** Manage drafts, scheduled posts, and media assets in a streamlined interface.
+- **Social Integrations:** Connect and publish directly to Twitter/X and Bluesky.
+- **Media Library:** Store and manage images for your posts.
+- **Modern UI:** Built with Next.js App Router, Tailwind CSS v4, and Shadcn/UI for a beautiful, responsive experience.
+
+---
+
+## 🔐 Authentication with Clerk
+
+Authentication and user management are handled by [Clerk.dev](https://clerk.dev/docs):
+
+- **Sign Up & Sign In:** Secure, customizable authentication flows.
+- **Session Management:** Persistent sessions across devices.
+- **User Profiles:** Users can update their profile, email, password, and manage social connections via Clerk's UI.
+- **Social Logins:** Easily connect Twitter/X and Bluesky accounts for seamless publishing.
+- **Protected Routes:** All user-specific pages (dashboard, generator, media library, etc.) are protected using Clerk middleware.
+- **API Security:** All API routes validate the user via Clerk before performing actions.
+
+_Example:_
+
+```tsx
+import { ClerkProvider } from "@clerk/nextjs"
+
+export default function RootLayout({ children }) {
+  return (
+    <ClerkProvider>
+      {/* ... */}
+      {children}
+    </ClerkProvider>
+  )
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend:** Next.js (App Router), Tailwind CSS v4, Shadcn/UI
+- **Backend:** Supabase (Edge Functions)
+- **Authentication:** Clerk.dev
+- **AI Integration:** OpenAI GPT models via Vercel AI SDK
+- **Package Manager:** pnpm
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📦 Real Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+/
+├── public/
+│   ├── images/
+│   │   └── bg-stripe.png
+│   └── opengraph-image.jpg
+├── src/
+│   ├── app/
+│   │   ├── [username]/
+│   │   │   ├── generator/
+│   │   │   ├── media-library/
+│   │   │   ├── posts/
+│   │   │   ├── settings/
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── api/
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── robots.ts
+│   │   └── sitemap.ts
+│   ├── assets/
+│   │   └── images/
+│   ├── components/
+│   │   ├── landing/
+│   │   ├── icons/
+│   │   ├── ui/
+│   │   ├── app-sidebar.tsx
+│   │   ├── copyright.tsx
+│   │   ├── dashboard-greeting.tsx
+│   │   ├── dashboard-header-gradient.tsx
+│   │   ├── logo.tsx
+│   │   ├── nav-generations.tsx
+│   │   ├── nav-main.tsx
+│   │   ├── nav-user.tsx
+│   │   ├── site-header.tsx
+│   │   ├── theme-switcher.tsx
+│   │   └── user-profile-dialog.tsx
+│   ├── hooks/
+│   │   └── use-mobile.ts
+│   ├── lib/
+│   │   ├── database.types.ts
+│   │   ├── supabaseAdmin.ts
+│   │   ├── supabaseClient.ts
+│   │   └── utils.ts
+│   ├── trigger/
+│   │   ├── scheduledPost.ts
+│   │   └── .gitkeep
+│   ├── middleware.ts
+│   └── trigger.ts
+├── README.md
+└── package.json
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🧪 Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Install dependencies:** `pnpm install`
+- **Run dev server:** `pnpm dev`
+- **Build:** `pnpm build`
+- **Lint:** `pnpm lint`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📝 References
+
+- [Supabase Documentation](https://supabase.com/docs)
+- [Clerk Documentation](https://clerk.dev/docs)
+- [Shadcn/UI Components](https://ui.shadcn.com/docs)
+- [Vercel AI SDK](https://ai-sdk.dev/docs/)
+- [OpenAI API Reference](https://platform.openai.com/docs)
+
+---
+
+## 📄 License
+
+Business Source License (see LICENSE file for details)

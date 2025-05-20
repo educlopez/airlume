@@ -1,0 +1,25 @@
+Business Source License 1.1
+
+Licensor: Edu Calvo
+
+Licensed Work: [Nombre del Proyecto] (el “Software”)
+
+The Licensed Work is subject to the terms of the Business Source License 1.1 (BSL), available at: https://mariadb.com/bsl11
+
+Change Date: 2028-05-20 (3 años desde la publicación)
+
+Change License: Apache License, Version 2.0
+
+Usage Limitations:
+This license allows non-production and non-commercial use of the Software. You MAY:
+
+- Use, modify and share the Software for personal, educational, and non-commercial projects.
+- Fork or contribute to the code for learning or experimentation.
+
+You MAY NOT:
+
+- Use the Software, or modified versions of it, to offer a competing service or product.
+- Use the Software in a commercial product, SaaS or hosted service, without the Licensor’s prior written permission.
+
+Additional Terms:
+After the Change Date, the Software will be permanently re-licensed under the Apache License 2.0.
