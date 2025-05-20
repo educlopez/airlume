@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --image-stripes: var(--image-stripes);
   --color-airlume: var(--airlume);
   --color-bt-gray: var(--bt-gray);
   --color-airlume-secondary: var(--airlume-secondary);
@@ -49,6 +50,7 @@
 }
 
 :root {
+  --image-stripes: url("/images/bg-stripe.png");
   --airlume: #1477f6;
   --bt-gray: #e5e7eb;
   --airlume-secondary: rgba(23, 23, 23, 1);
@@ -94,6 +96,7 @@
 }
 
 .dark {
+  --image-stripes: url("/images/bg-stripe-dark.png");
   --airlume: #1477f6;
   --bt-gray: black;
   --airlume-secondary: rgba(255, 255, 255, 1);
@@ -202,6 +205,6 @@
 }
 
 .bg-stripes {
-  background-image: url("/images/bg-stripe.png");
+  background-image: var(--image-stripes);
   background-repeat: repeat;
 }

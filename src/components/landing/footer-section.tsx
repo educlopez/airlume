@@ -61,7 +61,7 @@ export default function Footer() {
             href="https://x.com/educalvolpz"
             target="_blank"
             rel="noopener noreferrer"
-            className="group text-foreground  absolute top-1/2 left-1/2 z-1 flex w-full -translate-x-1/2 -translate-y-1/2 flex-row items-center justify-center gap-2"
+            className="group text-foreground hover:text-foreground/80 hover:shadow-custom hover:bg-primary absolute top-1/2 left-1/2 z-1 flex w-fit -translate-x-1/2 -translate-y-1/2 flex-row items-center justify-center gap-2 rounded-sm p-2"
           >
             <p className="text-xs font-medium">Made by</p>
             <div className="flex h-6 w-6 shrink-0 gap-2 rounded-full">

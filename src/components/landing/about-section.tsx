@@ -16,7 +16,11 @@ export default function AboutSection() {
             <span className="text-airlume font-bold">Airlume</span> is a modern
             AI-powered tool to generate engaging social media posts using smart
             presets, reusable prompts, and a streamlined interface. Built with
-            Next.js, Supabase, Clerk, and OpenAI.
+            <span className="text-airlume font-bold">
+              {" "}
+              Next.js, Supabase, Clerk, and OpenAI
+            </span>
+            .
           </p>
         </div>
         {/* Right side: Rotated cards in a row */}
