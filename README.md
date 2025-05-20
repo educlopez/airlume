@@ -1,6 +1,6 @@
-# ContentPilot AI
+# Airlume
 
-A modern AI-powered tool to generate blog articles and social media posts using smart presets, reusable prompts, and a streamlined interface.
+A modern AI-powered tool to generate social media posts using smart presets, reusable prompts, and a streamlined interface.
 
 [![Demo](https://airlume.vercel.app/)](https://airlume.vercel.app/)
 
@@ -24,7 +24,7 @@ A modern AI-powered tool to generate blog articles and social media posts using 
 
 ## ✨ Features
 
-- **AI Content Generation:** Generate high-quality blog articles and social media posts using OpenAI GPT models.
+- **AI Content Generation:** Generate high-quality social media posts using OpenAI GPT models.
 - **Smart Presets & Prompts:** Modular, reusable prompts for different content types and platforms.
 - **User Dashboard:** Manage drafts, scheduled posts, and media assets in a streamlined interface.
 - **Social Integrations:** Connect and publish directly to Twitter/X and Bluesky.
