@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import Educalvolpz from "@/assets/images/avatar/educalvolpz.jpg"
 import Midudev from "@/assets/images/avatar/midudev.jpg"
 import Shadcn from "@/assets/images/avatar/shadcn.jpg"
-import { SignUpButton } from "@clerk/nextjs"
+import { SignUpButton, useUser } from "@clerk/nextjs"
 import { motion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
@@ -52,6 +52,7 @@ const ANIMATION_DURATION = 12 // Slower: 12 seconds for a card to cross
 export default function HeroSection() {
   const [heroWidth, setHeroWidth] = useState(1200)
   const heroRef = useRef<HTMLDivElement>(null)
+  const { user, isLoaded, isSignedIn } = useUser()
 
   useEffect(() => {
     function updateWidth() {
@@ -141,11 +142,19 @@ export default function HeroSection() {
           time, spark your creativity, and grow your audience.
         </p>
         <div className="flex gap-6">
-          <SignUpButton>
-            <Button variant="custom" size="lg">
-              Get started free
+          {isLoaded && isSignedIn && user ? (
+            <Button variant="custom" size="lg" asChild>
+              <a href={`/${user.username || ""}`.replace(/\/$/, "") || "/"}>
+                Go to dashboard
+              </a>
             </Button>
-          </SignUpButton>
+          ) : (
+            <SignUpButton>
+              <Button variant="custom" size="lg">
+                Get started free
+              </Button>
+            </SignUpButton>
+          )}
           <Button variant="outline" size="lg" asChild>
             <a href="#features">See features</a>
           </Button>
