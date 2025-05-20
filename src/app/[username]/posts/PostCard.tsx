@@ -858,7 +858,7 @@ export function PostCard({
           <div className="flex flex-col gap-4">
             {hasBluesky ? (
               <div className="space-y-2">
-                <div className="font-medium text-green-700">
+                <div className="text-airlume font-medium">
                   Connected to Bluesky as <b>@{blueskyHandle}</b>
                 </div>
                 <div className="text-xs text-gray-500">

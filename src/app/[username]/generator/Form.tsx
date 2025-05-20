@@ -6,6 +6,7 @@ import { useUser } from "@clerk/nextjs"
 import {
   Atom,
   AtSign,
+  Check,
   CheckCircle,
   Copy,
   Eye,
@@ -349,8 +350,9 @@ export default function GeneratorForm({ userId }: { userId: string }) {
         </div>
         {hasUserKey && !editMode ? (
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
-            <div className="text-sm text-green-700">
-              Your OpenAI API key is set. All models are available.
+            <div className="text-airlume text-sm">
+              <Check className="h-4 w-4" /> Your OpenAI API key is set. All
+              models are available.
             </div>
             <div className="mt-2 flex gap-2 md:mt-0">
               <Button
@@ -903,7 +905,7 @@ function MetricsPanel({
           <span className="flex-1">Question</span>{" "}
           <span className="font-semibold">
             {metrics.isQuestion ? (
-              <CheckCircle className="inline size-4 text-green-500" />
+              <CheckCircle className="text-airlume inline size-4" />
             ) : (
               "No"
             )}
@@ -914,7 +916,7 @@ function MetricsPanel({
           <span className="flex-1">CTA</span>{" "}
           <span className="font-semibold">
             {metrics.cta ? (
-              <CheckCircle className="inline size-4 text-green-500" />
+              <CheckCircle className="text-airlume inline size-4" />
             ) : (
               "No"
             )}
@@ -946,7 +948,7 @@ function MetricsPanel({
         )}
       </div>
       {saveStatus && (
-        <div className="mt-1 text-xs text-green-600">{saveStatus}</div>
+        <div className="text-airlume mt-1 text-xs">{saveStatus}</div>
       )}
     </div>
   )

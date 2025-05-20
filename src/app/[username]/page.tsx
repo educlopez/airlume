@@ -1,24 +1,19 @@
-import React from "react";
-import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
-import { format, isAfter, parseISO } from "date-fns";
+import React from "react"
+import type { Metadata } from "next"
+import Image from "next/image"
+import Link from "next/link"
+import { currentUser } from "@clerk/nextjs/server"
+import { format, isAfter, parseISO } from "date-fns"
+import { AlertCircle, Check } from "lucide-react"
 
-
-
-import { createServerSupabaseClient } from "@/lib/supabaseClient";
-import { DashboardGreeting } from "@/components/dashboard-greeting";
-import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient";
-import { NotImageFound } from "@/components/icons/no-image-found";
-import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts";
-import BlueskyPromoImage from "@/components/ui/BlueskyPromoImage";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-
-
-
-
+import { createServerSupabaseClient } from "@/lib/supabaseClient"
+import { DashboardGreeting } from "@/components/dashboard-greeting"
+import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient"
+import { NotImageFound } from "@/components/icons/no-image-found"
+import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts"
+import BlueskyPromoImage from "@/components/ui/BlueskyPromoImage"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -173,17 +168,17 @@ export default async function DashboardHomePage() {
             <span className="mb-2 block font-semibold">Social Connections</span>
             {!isTwitterConnected && (
               <div className="mb-2 flex items-center gap-2 text-sm text-red-500">
-                <span>⚠️</span> Twitter not connected
+                <AlertCircle className="h-4 w-4" /> Twitter not connected
               </div>
             )}
             {!isBlueskyConnected && (
               <div className="mb-2 flex items-center gap-2 text-sm text-red-500">
-                <span>⚠️</span> Bluesky not connected
+                <AlertCircle className="h-4 w-4" /> Bluesky not connected
               </div>
             )}
             {isTwitterConnected && isBlueskyConnected && (
-              <div className="text-sm text-green-600">
-                All social accounts connected!
+              <div className="text-airlume flex flex-row items-center gap-2 text-sm">
+                <Check className="h-4 w-4" /> All social accounts connected!
               </div>
             )}
           </div>
