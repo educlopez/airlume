@@ -10,7 +10,7 @@ A modern AI-powered tool to generate social media posts using smart presets, reu
 
 ## 🚀 Demo
 
-**Live Demo:** [text-foregrohttps://airlume.vercel.app/und/70](text-foregrohttps://airlume.vercel.app/und/70)
+**Live Demo:** [https://airlume.vercel.app/](https://airlume.vercel.app/)
 
 ---
 
