@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { currentUser } from "@clerk/nextjs/server"
 
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
+import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts"
+import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { PostCard, type Generation, type Schedule } from "./PostCard"
@@ -175,7 +177,16 @@ export default async function PostsPage() {
         <TabsContent value="draft">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {draftPosts.length === 0 && (
-              <div className="text-muted-foreground">No drafts found.</div>
+              <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                <NoScheduledPosts
+                  primaryColor="var(--color-airlume)"
+                  backgroundColor="var(--color-primary)"
+                  className="ml-2"
+                />
+                <span className="text-muted-foreground text-sm">
+                  No draft founds.
+                </span>
+              </Card>
             )}
             {draftPosts.map((gen) => (
               <PostCard
@@ -197,7 +208,16 @@ export default async function PostsPage() {
                 </span>
               </div>
               {queueTwitter.length === 0 && (
-                <div className="text-muted-foreground">No scheduled posts.</div>
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoScheduledPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No scheduled posts.
+                  </span>
+                </Card>
               )}
               {queueTwitter.map((s) => (
                 <PostCard
@@ -217,7 +237,16 @@ export default async function PostsPage() {
                 </span>
               </div>
               {queueBluesky.length === 0 && (
-                <div className="text-muted-foreground">No scheduled posts.</div>
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoScheduledPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No scheduled posts.
+                  </span>
+                </Card>
               )}
               {queueBluesky.map((s) => (
                 <PostCard
@@ -241,7 +270,16 @@ export default async function PostsPage() {
                 </span>
               </div>
               {sentTwitter.length + directSentPosts.length === 0 && (
-                <div className="text-muted-foreground">No sent posts.</div>
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoScheduledPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No sent posts.
+                  </span>
+                </Card>
               )}
               {/* Scheduled sent posts */}
               {sentTwitter.map((s) => (
@@ -271,7 +309,16 @@ export default async function PostsPage() {
                 </span>
               </div>
               {sentBluesky.length === 0 && (
-                <div className="text-muted-foreground">No sent posts.</div>
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoScheduledPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No sent posts.
+                  </span>
+                </Card>
               )}
               {sentBluesky.map((s) => (
                 <PostCard
@@ -295,7 +342,16 @@ export default async function PostsPage() {
                 </span>
               </div>
               {failedTwitter.length === 0 && (
-                <div className="text-muted-foreground">No failed posts.</div>
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoScheduledPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No failed posts.
+                  </span>
+                </Card>
               )}
               {failedTwitter.map((s) => (
                 <PostCard
@@ -315,7 +371,16 @@ export default async function PostsPage() {
                 </span>
               </div>
               {failedBluesky.length === 0 && (
-                <div className="text-muted-foreground">No failed posts.</div>
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoScheduledPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No failed posts.
+                  </span>
+                </Card>
               )}
               {failedBluesky.map((s) => (
                 <PostCard

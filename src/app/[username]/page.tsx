@@ -1,16 +1,24 @@
-import React from "react"
-import type { Metadata } from "next"
-import Image from "next/image"
-import Link from "next/link"
-import { currentUser } from "@clerk/nextjs/server"
-import { format, isAfter, parseISO } from "date-fns"
+import React from "react";
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { currentUser } from "@clerk/nextjs/server";
+import { format, isAfter, parseISO } from "date-fns";
 
-import { createServerSupabaseClient } from "@/lib/supabaseClient"
-import { DashboardGreeting } from "@/components/dashboard-greeting"
-import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient"
-import BlueskyPromoImage from "@/components/ui/BlueskyPromoImage"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+
+
+import { createServerSupabaseClient } from "@/lib/supabaseClient";
+import { DashboardGreeting } from "@/components/dashboard-greeting";
+import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient";
+import { NotImageFound } from "@/components/icons/no-image-found";
+import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts";
+import BlueskyPromoImage from "@/components/ui/BlueskyPromoImage";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
+
+
+
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -179,89 +187,99 @@ export default async function DashboardHomePage() {
               </div>
             )}
           </div>
-          <Button className="mt-4 w-fit" variant="outline">
-            Manage Connections
+          <Button className="w-fit" variant="outline">
+            <Link href={`/${user.username}/settings`}>Manage Connections</Link>
           </Button>
         </Card>
 
         {/* Next scheduled post card */}
-        <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
-          {nextScheduled ? (
-            <>
-              <div>
-                <div className="flex flex-col gap-2">
-                  <span className="mb-2 block font-semibold">
-                    Next scheduled post
-                  </span>
-
-                  <div className="flex flex-row items-center gap-2">
-                    <div className="shadow-custom bg-primary flex max-w-fit flex-col items-center rounded-md p-4">
-                      <span className="font-mono text-4xl font-bold">
-                        {format(parseISO(nextScheduled.scheduled_at), "d")}
-                      </span>
-                      <span className="text-muted-foreground font-mono text-xs uppercase">
-                        {format(parseISO(nextScheduled.scheduled_at), "MMM")}
-                      </span>
-                      <span className="text-muted-foreground font-mono text-xs">
-                        {format(parseISO(nextScheduled.scheduled_at), "HH:mm")}
-                      </span>
-                    </div>
-                    <div className="line-clamp-4 text-sm">
-                      {(() => {
-                        const gen = Array.isArray(nextScheduled.generation)
-                          ? nextScheduled.generation[0]
-                          : nextScheduled.generation
-                        return gen?.response
-                          ? gen.response.split(" ").slice(0, 12).join(" ") +
-                              (gen.response.split(" ").length > 12 ? "..." : "")
-                          : ""
-                      })()}
-                    </div>
+        <Card className="bg-background shadow-custom flex flex-col justify-start border-none p-6">
+          <span className="mb-2 block font-semibold">Next scheduled post</span>
+          <div className="flex h-full flex-col items-start justify-between gap-2">
+            {nextScheduled ? (
+              <>
+                <div className="flex flex-row items-center gap-4">
+                  <div className="shadow-custom bg-primary flex max-w-fit flex-col items-center rounded-md p-4">
+                    <span className="font-mono text-4xl font-bold">
+                      {format(parseISO(nextScheduled.scheduled_at), "d")}
+                    </span>
+                    <span className="text-muted-foreground font-mono text-xs uppercase">
+                      {format(parseISO(nextScheduled.scheduled_at), "MMM")}
+                    </span>
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {format(parseISO(nextScheduled.scheduled_at), "HH:mm")}
+                    </span>
+                  </div>
+                  <div className="line-clamp-4 text-sm">
+                    {(() => {
+                      const gen = Array.isArray(nextScheduled.generation)
+                        ? nextScheduled.generation[0]
+                        : nextScheduled.generation
+                      return gen?.response
+                        ? gen.response.split(" ").slice(0, 12).join(" ") +
+                            (gen.response.split(" ").length > 12 ? "..." : "")
+                        : ""
+                    })()}
                   </div>
                 </div>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href={`/${user.username}/posts`}>See all posts</Link>
+                </Button>
+              </>
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center">
+                <NoScheduledPosts
+                  primaryColor="var(--color-airlume)"
+                  backgroundColor="var(--color-primary)"
+                  className="ml-2"
+                />
+                <span className="text-muted-foreground text-sm">
+                  There are no scheduled posts.
+                </span>
               </div>
-              <Button variant="outline" asChild>
-                <Link href={`/${user.username}/posts`}>See all posts</Link>
-              </Button>
-            </>
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center">
-              <span className="text-muted-foreground">
-                No hay posts programados
-              </span>
-            </div>
-          )}
+            )}
+          </div>
         </Card>
 
         {/* Gallery card */}
         <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
-          <div>
-            <span className="mb-2 block font-semibold">Media Library</span>
-            <div className="mb-2 flex gap-2">
-              {galleryImages.length === 0 && (
-                <span className="text-muted-foreground text-xs">No images</span>
-              )}
-              <div className="grid grid-cols-3 gap-2">
-                {galleryImages.map((src, i) => (
-                  <div
-                    key={i}
-                    className="relative h-full w-full overflow-hidden rounded-md border"
-                  >
-                    <Image
-                      src={src}
-                      alt="gallery"
-                      className="h-full w-full object-cover"
-                      width={64}
-                      height={64}
-                    />
-                  </div>
-                ))}
+          <span className="mb-2 block font-semibold">Media Library</span>
+          <div className="flex items-center justify-center gap-2">
+            {galleryImages.length === 0 && (
+              <div className="flex h-full flex-col items-center justify-center">
+                <NotImageFound
+                  primaryColor="var(--color-airlume)"
+                  backgroundColor="var(--color-primary)"
+                  className="ml-2"
+                />
+                <span className="text-muted-foreground text-sm">No images</span>
               </div>
+            )}
+            <div className="grid grid-cols-3 gap-2">
+              {galleryImages.map((src, i) => (
+                <div
+                  key={i}
+                  className="relative h-full w-full overflow-hidden rounded-md border"
+                >
+                  <Image
+                    src={src}
+                    alt="gallery"
+                    className="h-full w-full object-cover"
+                    width={64}
+                    height={64}
+                  />
+                </div>
+              ))}
             </div>
           </div>
-          <Button variant="outline" asChild>
-            <Link href={`/${user.username}/media-library`}>See all images</Link>
-          </Button>
+
+          {galleryImages.length >= 1 && (
+            <Button variant="outline" asChild>
+              <Link href={`/${user.username}/media-library`}>
+                See all images
+              </Link>
+            </Button>
+          )}
         </Card>
       </div>
 
