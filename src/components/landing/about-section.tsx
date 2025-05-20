@@ -24,19 +24,19 @@ export default function AboutSection() {
           <div className="relative flex flex-row gap-[-3rem] md:gap-[-4rem]">
             {/* Card 1 */}
             <Card className="bg-primary z-10 -mr-12 w-80 rotate-[-8deg] rounded-2xl border border-dashed border-gray-300 py-6 shadow-md transition-transform duration-200 select-none hover:-translate-y-2 hover:shadow-lg">
-              <CardContent className="text-xl font-medium text-gray-700">
+              <CardContent className="text-foreground/70 text-xl font-medium">
                 AI-Powered Social Media Content That Drives Engagement
               </CardContent>
             </Card>
             {/* Card 2 */}
             <Card className="bg-primary z-20 -mr-12 w-80 rotate-[4deg] rounded-2xl border border-dashed border-gray-300 py-6 shadow-md transition-transform duration-200 select-none hover:-translate-y-2 hover:shadow-lg">
-              <CardContent className="text-xl font-medium text-gray-700">
+              <CardContent className="text-foreground/70 text-xl font-medium">
                 Streamlining Social Media Management with Smart AI Presets
               </CardContent>
             </Card>
             {/* Card 3 */}
             <Card className="bg-primary z-0 w-80 rotate-[7deg] rounded-2xl border border-dashed border-gray-300 py-6 shadow-md transition-transform duration-200 select-none hover:-translate-y-2 hover:shadow-lg">
-              <CardContent className="text-xl font-medium text-gray-700">
+              <CardContent className="text-foreground/70 text-xl font-medium">
                 Create Viral Social Media Posts with AI Assistance and Schedule
                 Them
               </CardContent>

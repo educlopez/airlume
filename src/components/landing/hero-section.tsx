@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 
 export default function HeroSection() {
   return (
-    <section className="bg-background shadow-custom relative px-4 py-32 sm:px-8">
+    <section className="bg-background shadow-custom relative bg-gradient-to-br px-4 py-36 sm:px-8">
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center">
         <h1 className="text-foreground text-6xl leading-tight font-extrabold tracking-tight">
           Create irresistible content for your social media with AI
