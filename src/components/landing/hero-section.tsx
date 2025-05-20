@@ -8,9 +8,6 @@ export default function HeroSection() {
     <section className="bg-background shadow-custom relative px-4 py-32 sm:px-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-20 md:flex-row">
         <div className="flex-1">
-          <div className="text-foreground/70 mb-6 text-base font-semibold tracking-wider uppercase">
-            Trusted by 200+ creators
-          </div>
           <h1 className="text-foreground mb-8 text-6xl leading-tight font-extrabold tracking-tight">
             Create irresistible content for your blog and social media with AI
           </h1>

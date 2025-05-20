@@ -7,7 +7,7 @@ export default function Footer() {
         href="https://x.com/educalvolpz"
         target="_blank"
         rel="noopener noreferrer"
-        className="group text-light-950 dark:text-dark-950 mb-4 flex w-full flex-row items-center justify-center gap-2"
+        className="group text-light-950 dark:text-dark-950 flex w-full flex-row items-center justify-center gap-2"
       >
         <p className="text-xs font-medium">Made by</p>
         <div className="flex h-6 w-6 shrink-0 gap-2 rounded-full">
@@ -21,7 +21,6 @@ export default function Footer() {
         </div>
         <p className="text-xs font-bold">Eduardo Calvo</p>
       </a>
-      <p>© 2025 Airlume. All rights reserved</p>
     </footer>
   )
 }

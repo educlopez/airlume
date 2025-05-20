@@ -134,9 +134,6 @@ export default async function DashboardHomePage() {
     }),
   ])
 
-  // 4. Placeholder image for Bluesky promo
-  const blueskyImage = galleryImages[0] || "/placeholder-bluesky.jpg"
-
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -191,35 +188,41 @@ export default async function DashboardHomePage() {
         <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
           {nextScheduled ? (
             <>
-              <div className="mb-2">
-                <span className="bg-muted text-muted-foreground mb-2 inline-block rounded px-2 py-0.5 text-xs font-semibold">
-                  READY
-                </span>
-                <div className="truncate text-lg font-semibold">
-                  {(() => {
-                    const gen = Array.isArray(nextScheduled.generation)
-                      ? nextScheduled.generation[0]
-                      : nextScheduled.generation
-                    return gen?.response
-                      ? gen.response.split(" ").slice(0, 6).join(" ") +
-                          (gen.response.split(" ").length > 6 ? "..." : "")
-                      : ""
-                  })()}
-                </div>
-                <div className="text-muted-foreground text-sm">scheduled</div>
-                <hr className="border-muted my-2" />
-                <div className="flex flex-col items-center">
-                  <span className="text-4xl font-bold">
-                    {format(parseISO(nextScheduled.scheduled_at), "d")}
+              <div>
+                <div className="flex flex-col gap-2">
+                  <span className="mb-2 block font-semibold">
+                    Next scheduled post
                   </span>
-                  <span className="text-muted-foreground text-xs uppercase">
-                    {format(parseISO(nextScheduled.scheduled_at), "MMM")}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {format(parseISO(nextScheduled.scheduled_at), "HH:mm")}
-                  </span>
+
+                  <div className="flex flex-row items-center gap-2">
+                    <div className="shadow-custom bg-primary flex max-w-fit flex-col items-center rounded-md p-4">
+                      <span className="text-4xl font-bold">
+                        {format(parseISO(nextScheduled.scheduled_at), "d")}
+                      </span>
+                      <span className="text-muted-foreground text-xs uppercase">
+                        {format(parseISO(nextScheduled.scheduled_at), "MMM")}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {format(parseISO(nextScheduled.scheduled_at), "HH:mm")}
+                      </span>
+                    </div>
+                    <div className="line-clamp-4 text-sm">
+                      {(() => {
+                        const gen = Array.isArray(nextScheduled.generation)
+                          ? nextScheduled.generation[0]
+                          : nextScheduled.generation
+                        return gen?.response
+                          ? gen.response.split(" ").slice(0, 12).join(" ") +
+                              (gen.response.split(" ").length > 12 ? "..." : "")
+                          : ""
+                      })()}
+                    </div>
+                  </div>
                 </div>
               </div>
+              <Button variant="outline" asChild>
+                <Link href={`/${user.username}/posts`}>See all posts</Link>
+              </Button>
             </>
           ) : (
             <div className="flex h-full flex-col items-center justify-center">
@@ -233,60 +236,64 @@ export default async function DashboardHomePage() {
         {/* Gallery card */}
         <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
           <div>
-            <span className="mb-2 block font-semibold">Galería</span>
+            <span className="mb-2 block font-semibold">Media Library</span>
             <div className="mb-2 flex gap-2">
               {galleryImages.length === 0 && (
                 <span className="text-muted-foreground text-xs">No images</span>
               )}
-              {galleryImages.map((src, i) => (
-                <div
-                  key={i}
-                  className="relative h-16 w-16 overflow-hidden rounded border"
-                >
-                  <Image
-                    src={src}
-                    alt="gallery"
-                    className="h-full w-full object-cover"
-                    width={64}
-                    height={64}
-                  />
-                </div>
-              ))}
+              <div className="grid grid-cols-3 gap-2">
+                {galleryImages.map((src, i) => (
+                  <div
+                    key={i}
+                    className="relative h-full w-full overflow-hidden rounded-md border"
+                  >
+                    <Image
+                      src={src}
+                      alt="gallery"
+                      className="h-full w-full object-cover"
+                      width={64}
+                      height={64}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-          <Link
-            href={`/${user.username}/media-library`}
-            className="text-primary mt-2 text-xs underline"
-          >
-            Gestionar galería
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href={`/${user.username}/media-library`}>See all images</Link>
+          </Button>
         </Card>
       </div>
 
       {/* Promo Bluesky + Recent Activity */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Bluesky promo */}
-        <Card className="bg-background shadow-custom flex flex-row items-center justify-between border-none p-6">
+        <Card className="bg-background shadow-custom flex flex-row items-center justify-between overflow-hidden border-none p-6">
           <div className="flex-1 pr-4">
             <span className="mb-2 block font-semibold">
-              Publish your photos in Bluesky!¡Publica tus fotos en Bluesky!
+              Publish your photos in Bluesky!
             </span>
             <p className="text-muted-foreground text-sm">
               Connect your account and share images generated by AI directly in
               Bluesky.
             </p>
           </div>
-          <div className="flex-shrink-0">
-            <BlueskyPromoImage src={blueskyImage} alt="Bluesky post preview" />
+          <div className="group relative flex-1">
+            <div className="absolute -right-20 -bottom-40 transition-all duration-300 group-hover:-bottom-36">
+              <BlueskyPromoImage
+                src="https://github.com/educlopez.png"
+                alt="Bluesky avatar user preview"
+              />
+            </div>
           </div>
         </Card>
         {/* Recent Activity */}
         <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
           <span className="mb-2 block font-semibold">Recent Activity</span>
           <ul className="ml-5 list-disc text-sm">
-            <li>{publishedCount} posts publicados esta semana</li>
-            <li>{draftCountRecent} borradores editados</li>
-            <li>{imageCount} imágenes subidas</li>
+            <li>{publishedCount} posts published this week</li>
+            <li>{draftCountRecent} drafts edited</li>
+            <li>{imageCount} images uploaded</li>
           </ul>
         </Card>
       </div>

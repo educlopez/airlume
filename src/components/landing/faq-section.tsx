@@ -27,15 +27,16 @@ export default function FAQSection() {
               personalize results.
             </div>
           </div>
+          {/*
           <div className="shadow-custom bg-primary rounded-2xl p-6">
             <div className="text-foreground mb-2 text-lg font-bold">
               Can I publish directly to my social networks?
             </div>
             <div className="text-foreground/70 text-base">
-              Yes, you can connect your accounts and publish to X (Twitter) and
-              LinkedIn from the platform.
+              Yes, you can connect your accounts and publish to X (Twitter) and LinkedIn from the platform.
             </div>
           </div>
+          */}
           <div className="shadow-custom bg-primary rounded-2xl p-6">
             <div className="text-foreground mb-2 text-lg font-bold">
               Is my content secure?
