@@ -23,6 +23,7 @@ export default function NavBar() {
   const username = user?.username || "dashboard"
 
   const router = useRouter()
+  const iconRef = useRef<HomeIconHandle | null>(null)
 
   if (!isLoaded) {
     return (
@@ -35,8 +36,6 @@ export default function NavBar() {
   const handleDashboardClick = () => {
     router.push(`/${username}`)
   }
-
-  const iconRef = useRef<HomeIconHandle | null>(null)
 
   return (
     <header className="shadow-custom bg-background text-foreground fixed top-5 left-1/2 z-50 inline-flex min-w-4xl -translate-x-1/2 rounded-full">

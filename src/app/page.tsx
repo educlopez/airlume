@@ -5,9 +5,6 @@ import Footer from "@/components/landing/footer-section"
 import HeroSection from "@/components/landing/hero-section"
 import NavBar from "@/components/landing/nav-bar"
 import ProcessSection from "@/components/landing/process-section"
-import ServicesSection from "@/components/landing/services-section"
-
-// import TestimonialsSection from "@/components/landing/testimonials-section"
 
 export default function Home() {
   return (
@@ -28,9 +25,8 @@ export default function Home() {
       </div>
       <NavBar />
       <HeroSection />
-      <ServicesSection />
-      <ProcessSection />
       <AboutSection />
+      <ProcessSection />
       <FAQSection />
       <CTASection />
       <Footer />
