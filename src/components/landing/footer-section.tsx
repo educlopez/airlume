@@ -26,8 +26,8 @@ export default function Footer() {
                 className="h-5 w-5"
               />
               <div className="flex max-w-[200px] flex-col items-start justify-start text-left">
-                <p className="font-bold">Sparkbites</p>
-                <p className="text-xs">
+                <p className="text-foreground font-bold">Sparkbites</p>
+                <p className="text-foreground/70 text-xs">
                   Inspiration directory for your next project
                 </p>
               </div>
@@ -46,8 +46,8 @@ export default function Footer() {
                 className="h-5 w-5"
               />
               <div className="flex max-w-[200px] flex-col items-start justify-start text-left">
-                <p className="font-bold">SmoothUI</p>
-                <p className="text-xs">
+                <p className="text-foreground font-bold">SmoothUI</p>
+                <p className="text-foreground/70 text-xs">
                   Components using Motion, React and TailwindCSS
                 </p>
               </div>
@@ -61,7 +61,7 @@ export default function Footer() {
             href="https://x.com/educalvolpz"
             target="_blank"
             rel="noopener noreferrer"
-            className="group text-light-950 dark:text-dark-950 absolute top-1/2 left-1/2 z-1 flex w-full -translate-x-1/2 -translate-y-1/2 flex-row items-center justify-center gap-2"
+            className="group text-foreground  absolute top-1/2 left-1/2 z-1 flex w-full -translate-x-1/2 -translate-y-1/2 flex-row items-center justify-center gap-2"
           >
             <p className="text-xs font-medium">Made by</p>
             <div className="flex h-6 w-6 shrink-0 gap-2 rounded-full">
