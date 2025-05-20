@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -14,6 +15,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher"
 import { Button } from "@/components/ui/button"
 
 import { HomeIcon } from "../icons/home"
+import type { HomeIconHandle } from "../icons/home"
 import Logo from "../logo"
 
 export default function NavBar() {
@@ -33,6 +35,8 @@ export default function NavBar() {
   const handleDashboardClick = () => {
     router.push(`/${username}`)
   }
+
+  const iconRef = useRef<HomeIconHandle | null>(null)
 
   return (
     <header className="shadow-custom bg-background text-foreground fixed top-5 left-1/2 z-50 inline-flex min-w-4xl -translate-x-1/2 rounded-full">
@@ -79,8 +83,13 @@ export default function NavBar() {
           <SignedIn>
             {isLoaded && isSignedIn && user ? (
               <>
-                <Button onClick={handleDashboardClick} variant="custom">
-                  <HomeIcon />
+                <Button
+                  onClick={handleDashboardClick}
+                  variant="custom"
+                  onMouseEnter={() => iconRef.current?.startAnimation?.()}
+                  onMouseLeave={() => iconRef.current?.stopAnimation?.()}
+                >
+                  <HomeIcon ref={iconRef} />
                   Dashboard
                 </Button>
               </>
