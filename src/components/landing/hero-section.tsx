@@ -124,7 +124,7 @@ export default function HeroSection() {
       </div>
       {/* Radial gradient overlay (fades the post) */}
       <div
-        className="pointer-events-none absolute inset-0 left-1/2 z-20 -translate-x-1/2"
+        className="pointer-events-none absolute inset-0 left-1/2 z-20 w-full -translate-x-1/2"
         aria-hidden="true"
         style={{
           background:
