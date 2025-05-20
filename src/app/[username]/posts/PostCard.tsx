@@ -471,7 +471,7 @@ export function PostCard({
 
   return (
     <Card className="shadow-custom bg-background gap-4 border-none py-4">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 px-2">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-2">
           {/* Icono de plataforma fuera del badge */}
           {schedule && (
@@ -512,60 +512,184 @@ export function PostCard({
         </div>
         {/* DropdownMenu: solo permite duplicar si todas sent/failed/draft, borrar solo si todas draft/failed */}
         {!schedule && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <EllipsisVertical className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {/* Duplicar: solo si todas las plataformas están en sent, failed o draft */}
-              {platforms.every((p) =>
-                ["sent", "failed", "draft"].includes(p.status)
-              ) && (
-                <DropdownMenuItem
-                  onClick={async () => {
-                    await duplicateGeneration({
-                      id: generation.id,
-                      user_id: user.id,
-                    })
-                    toast.success("Post duplicated as draft")
-                    window.location.reload()
-                  }}
-                >
-                  <Copy className="mr-2 size-4" /> Duplicate
-                </DropdownMenuItem>
-              )}
-              {/* Borrar: solo si todas draft o failed */}
-              {platforms.every((p) =>
-                ["draft", "failed"].includes(p.status)
-              ) && (
-                <>
-                  <DropdownMenuSeparator />
+          <div className="flex flex-row items-center gap-2">
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Pencil className="size-4" /> Edit
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
+                <DialogHeader>
+                  <DialogTitle>Edit Draft</DialogTitle>
+                </DialogHeader>
+                <div className="mt-4 flex w-full flex-col gap-6 md:flex-row">
+                  <div className="flex flex-1 flex-col gap-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Avatar>
+                        <AvatarImage
+                          src={user?.imageUrl ?? ""}
+                          alt={user?.fullName || user?.username || "User"}
+                        />
+                        <AvatarFallback>
+                          {user?.firstName?.[0] || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">
+                        {user?.fullName || user?.username}
+                      </span>
+                    </div>
+                    <textarea
+                      className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
+                      value={response}
+                      onChange={(e) => setResponse(e.target.value)}
+                    />
+                    <div className="mt-2 flex items-center gap-4">
+                      {imageUrlFromLibrary || imageUrl ? (
+                        <div className="relative">
+                          <Image
+                            src={
+                              imageUrlFromLibrary
+                                ? imageUrlFromLibrary
+                                : imageUrl
+                            }
+                            alt="Preview"
+                            width={80}
+                            height={80}
+                            className="max-h-20 min-h-10 min-w-10 rounded border object-contain"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="absolute -top-2 -right-2"
+                            onClick={() => {
+                              setImageUrl("")
+                              setImageUrlFromLibrary(null)
+                              setImageFile(null)
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ) : null}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {imageUrlFromLibrary || imageUrl
+                          ? "Change Image"
+                          : "Add Image"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setMediaDialogOpen(true)}
+                      >
+                        Choose from Media Library
+                      </Button>
+                      <MediaLibraryPicker
+                        userId={user.id}
+                        open={mediaDialogOpen}
+                        onOpenChange={setMediaDialogOpen}
+                        onSelect={(url: string) => {
+                          // Always clear all other image states when picking from library
+                          setImageUrlFromLibrary(url)
+                          setImageUrl("")
+                          setImageFile(null)
+                          setImageFileError(null)
+                          setMediaDialogOpen(false)
+                        }}
+                      />
+                    </div>
+                    {imageFileError && (
+                      <div className="mt-2 text-xs text-red-500">
+                        {imageFileError}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <DialogFooter className="mt-6">
+                  <DialogClose asChild>
+                    <Button
+                      variant="outline"
+                      disabled={saving || !!imageFileError}
+                    >
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button
+                    variant="custom"
+                    onClick={handleSave}
+                    disabled={saving || !!imageFileError}
+                  >
+                    {saving ? "Saving..." : "Save Draft"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <EllipsisVertical className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {/* Duplicar: solo si todas las plataformas están en sent, failed o draft */}
+                {platforms.every((p) =>
+                  ["sent", "failed", "draft"].includes(p.status)
+                ) && (
                   <DropdownMenuItem
-                    className="text-destructive"
                     onClick={async () => {
-                      await deleteGeneration(generation.id)
-                      toast.success("Post deleted")
+                      await duplicateGeneration({
+                        id: generation.id,
+                        user_id: user.id,
+                      })
+                      toast.success("Post duplicated as draft")
                       window.location.reload()
                     }}
                   >
-                    <Trash2 className="mr-2 size-4" /> Delete
+                    <Copy className="mr-2 size-4" /> Duplicate
                   </DropdownMenuItem>
-                </>
-              )}
-              {/* Si hay alguna sent, no permitir borrar */}
-              {platforms.some((p) => p.status === "sent") && (
-                <DropdownMenuItem disabled>
-                  <Trash2 className="mr-2 size-4" /> Cannot delete published
-                  post
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                )}
+                {/* Borrar: solo si todas draft o failed */}
+                {platforms.every((p) =>
+                  ["draft", "failed"].includes(p.status)
+                ) && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        await deleteGeneration(generation.id)
+                        toast.success("Post deleted")
+                        window.location.reload()
+                      }}
+                    >
+                      <Trash2 className="mr-2 size-4" /> Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {/* Si hay alguna sent, no permitir borrar */}
+                {platforms.some((p) => p.status === "sent") && (
+                  <DropdownMenuItem disabled>
+                    <Trash2 className="mr-2 size-4" /> Cannot delete published
+                    post
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </CardHeader>
-      <CardContent className="shadow-custom bg-primary mx-2 flex flex-col items-start gap-4 rounded-lg p-2 md:flex-row">
+      <CardContent className="shadow-custom bg-primary mx-4 flex flex-col items-start gap-4 rounded-lg p-2 md:flex-row">
         {generation.image_url ? (
           <div className="shadow-custom flex max-h-36 max-w-36 items-center justify-center overflow-hidden rounded">
             <Image
@@ -581,7 +705,7 @@ export function PostCard({
           {generation.response}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 px-2 md:flex-row md:items-center md:justify-between">
+      <CardFooter className="flex flex-col gap-2 px-4 md:flex-row md:items-center md:justify-between">
         <div className="text-primary-foreground text-xs">
           Created:{" "}
           <span className="font-mono">
@@ -662,129 +786,6 @@ export function PostCard({
               >
                 Publish
               </Button>
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Pencil className="mr-1 size-4" /> Edit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
-                  <DialogHeader>
-                    <DialogTitle>Edit Draft</DialogTitle>
-                  </DialogHeader>
-                  <div className="mt-4 flex w-full flex-col gap-6 md:flex-row">
-                    <div className="flex flex-1 flex-col gap-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Avatar>
-                          <AvatarImage
-                            src={user?.imageUrl ?? ""}
-                            alt={user?.fullName || user?.username || "User"}
-                          />
-                          <AvatarFallback>
-                            {user?.firstName?.[0] || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">
-                          {user?.fullName || user?.username}
-                        </span>
-                      </div>
-                      <textarea
-                        className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
-                        value={response}
-                        onChange={(e) => setResponse(e.target.value)}
-                      />
-                      <div className="mt-2 flex items-center gap-4">
-                        {imageUrlFromLibrary || imageUrl ? (
-                          <div className="relative">
-                            <Image
-                              src={
-                                imageUrlFromLibrary
-                                  ? imageUrlFromLibrary
-                                  : imageUrl
-                              }
-                              alt="Preview"
-                              width={80}
-                              height={80}
-                              className="max-h-20 min-h-10 min-w-10 rounded border object-contain"
-                            />
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="absolute -top-2 -right-2"
-                              onClick={() => {
-                                setImageUrl("")
-                                setImageUrlFromLibrary(null)
-                                setImageFile(null)
-                              }}
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        ) : null}
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageChange}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          {imageUrlFromLibrary || imageUrl
-                            ? "Change Image"
-                            : "Add Image"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setMediaDialogOpen(true)}
-                        >
-                          Choose from Media Library
-                        </Button>
-                        <MediaLibraryPicker
-                          userId={user.id}
-                          open={mediaDialogOpen}
-                          onOpenChange={setMediaDialogOpen}
-                          onSelect={(url: string) => {
-                            // Always clear all other image states when picking from library
-                            setImageUrlFromLibrary(url)
-                            setImageUrl("")
-                            setImageFile(null)
-                            setImageFileError(null)
-                            setMediaDialogOpen(false)
-                          }}
-                        />
-                      </div>
-                      {imageFileError && (
-                        <div className="mt-2 text-xs text-red-500">
-                          {imageFileError}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <DialogFooter className="mt-6">
-                    <DialogClose asChild>
-                      <Button
-                        variant="outline"
-                        disabled={saving || !!imageFileError}
-                      >
-                        Cancel
-                      </Button>
-                    </DialogClose>
-                    <Button
-                      variant="custom"
-                      onClick={handleSave}
-                      disabled={saving || !!imageFileError}
-                    >
-                      {saving ? "Saving..." : "Save Draft"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </>
           )}
         </div>
