@@ -11,12 +11,12 @@ import { ThemeProvider } from "next-themes"
 import { baseUrl } from "./sitemap"
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 })
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
 })
 
@@ -87,8 +87,17 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          {process.env.NODE_ENV === "production" && (
+            <script
+              defer
+              src="https://cloud.umami.is/script.js"
+              data-website-id="79cc1f27-28ad-42b8-b452-efb8858a0730"
+            ></script>
+          )}
+        </head>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistMono.variable} ${geistSans.variable} font-sans antialiased`}
         >
           <ThemeProvider
             attribute="class"

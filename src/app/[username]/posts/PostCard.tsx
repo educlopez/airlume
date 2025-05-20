@@ -583,7 +583,10 @@ export function PostCard({
       </CardContent>
       <CardFooter className="flex flex-col gap-2 px-2 md:flex-row md:items-center md:justify-between">
         <div className="text-primary-foreground text-xs">
-          Created {new Date(generation.created_at).toLocaleString()}
+          Created:{" "}
+          <span className="font-mono">
+            {new Date(generation.created_at).toLocaleString()}
+          </span>
         </div>
         <div className="flex gap-2">
           {/* Acciones por schedule */}

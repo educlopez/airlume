@@ -145,9 +145,9 @@ export default async function DashboardHomePage() {
           </p>
         </div>
         <div className="mt-4 md:mt-0">
-          <Card className="shadow-custom bg-primary/80 flex flex-col items-start border-none p-4">
+          <Card className="shadow-custom bg-primary/80 flex flex-col items-start gap-2 border-none p-4">
             <span className="font-semibold">Drafts</span>
-            <span className="text-2xl font-bold">
+            <span className="font-mono text-4xl font-bold">
               {draftError ? "-" : draftCount}
             </span>
             <span className="text-muted-foreground text-xs">
@@ -196,13 +196,13 @@ export default async function DashboardHomePage() {
 
                   <div className="flex flex-row items-center gap-2">
                     <div className="shadow-custom bg-primary flex max-w-fit flex-col items-center rounded-md p-4">
-                      <span className="text-4xl font-bold">
+                      <span className="font-mono text-4xl font-bold">
                         {format(parseISO(nextScheduled.scheduled_at), "d")}
                       </span>
-                      <span className="text-muted-foreground text-xs uppercase">
+                      <span className="text-muted-foreground font-mono text-xs uppercase">
                         {format(parseISO(nextScheduled.scheduled_at), "MMM")}
                       </span>
-                      <span className="text-muted-foreground text-xs">
+                      <span className="text-muted-foreground font-mono text-xs">
                         {format(parseISO(nextScheduled.scheduled_at), "HH:mm")}
                       </span>
                     </div>
