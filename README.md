@@ -2,8 +2,6 @@
 
 A modern AI-powered tool to generate social media posts using smart presets, reusable prompts, and a streamlined interface.
 
-[![Demo](https://airlume.vercel.app/)](https://airlume.vercel.app/)
-
 ![Airlume Screenshot](public/opengraph-image.jpg)
 
 ---
@@ -16,9 +14,31 @@ A modern AI-powered tool to generate social media posts using smart presets, reu
 
 ## 🖼️ Screenshots
 
-> _Replace or add more screenshots/GIFs as needed!_
-
-![Dashboard Screenshot](public/opengraph-image.jpg)
+<p align="center">
+  <img src="public/github/Landing.gif" alt="Landing Gif" width="600"style="max-width: 100%; width: 100%; height: auto;"/>
+  <br/>
+  <em>Landing Demo</em>
+</p>
+<p align="center">
+  <img src="public/github/dashboard.png" alt="Dashboard Demo" width="600"  width="600"style="max-width: 100%; width: 100%; height: auto;"/>
+  <br/>
+  <em>Dashboard</em>
+</p>
+<p align="center">
+  <img src="public/github/generator.png" alt="generator Demo" width="600"  width="600"style="max-width: 100%; width: 100%; height: auto;"/>
+  <br/>
+  <em>AI Generator</em>
+</p>
+<p align="center">
+  <img src="public/github/scheduler.gif" alt="Scheduler Demo" width="600"  width="600"style="max-width: 100%; width: 100%; height: auto;"/>
+  <br/>
+  <em>Scheduler</em>
+</p>
+<p align="center">
+  <img src="public/github/media-library.gif" alt="Media Library Demo" width="600"  width="600"style="max-width: 100%; width: 100%; height: auto;"/>
+  <br/>
+  <em>Media Library</em>
+</p>
 
 ---
 
