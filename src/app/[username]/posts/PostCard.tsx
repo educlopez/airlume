@@ -161,6 +161,10 @@ export function PostCard({
   const scheduledAt = schedule?.scheduled_at
   const errorMessage = schedule?.error_message
 
+  // Hide action buttons if sent (direct or any platform sent)
+  const isSent =
+    generation.status === "sent" || platforms.some((p) => p.status === "sent")
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     // Always clear all other image states when picking a new file
@@ -489,20 +493,22 @@ export function PostCard({
             <span
               className="mr-2 inline-block h-3 w-3 rounded"
               style={{
-                backgroundColor:
-                  scheduleStatus === "failed"
+                backgroundColor: isSent
+                  ? "#12B981" // sent color
+                  : scheduleStatus === "failed"
                     ? "#F43F5F"
-                    : scheduleStatus === "sent"
-                      ? "#12B981"
-                      : scheduleStatus === "queue"
-                        ? "#A88BFA"
-                        : "#A1A1AA",
+                    : scheduleStatus === "queue"
+                      ? "#A88BFA"
+                      : "#A1A1AA",
               }}
             />
-            {scheduleStatus
-              ? scheduleStatus.charAt(0).toUpperCase() + scheduleStatus.slice(1)
-              : generation.status.charAt(0).toUpperCase() +
-                generation.status.slice(1)}
+            {isSent
+              ? "Sent"
+              : scheduleStatus
+                ? scheduleStatus.charAt(0).toUpperCase() +
+                  scheduleStatus.slice(1)
+                : generation.status.charAt(0).toUpperCase() +
+                  generation.status.slice(1)}
             {scheduledAt && (
               <span className="text-foreground/70 ml-1 text-xs">
                 ({format(new Date(scheduledAt), "MMM d, HH:mm")})
@@ -511,7 +517,7 @@ export function PostCard({
           </span>
         </div>
         {/* DropdownMenu: solo permite duplicar si todas sent/failed/draft, borrar solo si todas draft/failed */}
-        {!schedule && (
+        {!schedule && !isSent && (
           <div className="flex flex-row items-center gap-2">
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
@@ -760,7 +766,7 @@ export function PostCard({
             </Button>
           )}
           {/* Acciones para drafts */}
-          {!schedule && (
+          {!schedule && !isSent && (
             <>
               <Button
                 variant="outline"
