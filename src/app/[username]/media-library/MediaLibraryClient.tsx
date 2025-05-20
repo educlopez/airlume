@@ -160,9 +160,12 @@ export default function MediaLibraryClient({
           }}
           aria-label={isSelecting ? "Cancel selection" : "Select images"}
         >
-          <Button variant="custom">
-            {isSelecting ? "Cancel selection" : "Select to delete"}
-          </Button>
+          {" "}
+          {!isSelecting ? (
+            <Button variant="custom">Select to delete</Button>
+          ) : (
+            <Button variant="destructive">Cancel selection</Button>
+          )}
         </motion.div>
         {selected.length > 0 && (
           <motion.div
@@ -219,7 +222,7 @@ export default function MediaLibraryClient({
                 )}
                 {/* Overlay for in-use */}
                 {isUsed && (
-                  <div className="absolute top-2 left-2 z-2 flex items-center gap-1 rounded bg-yellow-100 px-2 py-1 text-xs text-yellow-800 shadow">
+                  <div className="bg-background shadow-custom text-foreground absolute top-2 left-2 z-2 flex items-center gap-1 rounded px-2 py-1 text-xs">
                     <Eye size={14} /> In use
                   </div>
                 )}
