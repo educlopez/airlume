@@ -5,6 +5,7 @@
 
 @theme inline {
   --color-airlume: var(--airlume);
+  --color-bt-gray: var(--bt-gray);
   --color-airlume-secondary: var(--airlume-secondary);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,6 +50,7 @@
 
 :root {
   --airlume: #1477f6;
+  --bt-gray: #e5e7eb;
   --airlume-secondary: rgba(23, 23, 23, 1);
   --radius: 0.5rem;
   --background: oklch(98.51% 0 0);
@@ -93,6 +95,7 @@
 
 .dark {
   --airlume: #1477f6;
+  --bt-gray: black;
   --airlume-secondary: rgba(255, 255, 255, 1);
   --background: oklch(21.03% 0.0059 285.89);
   --foreground: oklch(96.74% 0.0013 286.38);
