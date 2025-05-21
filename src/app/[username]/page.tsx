@@ -4,13 +4,13 @@ import Image from "next/image"
 import Link from "next/link"
 import { currentUser } from "@clerk/nextjs/server"
 import { format, isAfter, parseISO } from "date-fns"
-import { AlertCircle, Check } from "lucide-react"
 
 import { createServerSupabaseClient } from "@/lib/supabaseClient"
 import { DashboardGreeting } from "@/components/dashboard-greeting"
 import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient"
 import { NotImageFound } from "@/components/icons/no-image-found"
 import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts"
+import { SocialConnectionsCard } from "@/components/social-connections-card"
 import BlueskyPromoImage from "@/components/ui/BlueskyPromoImage"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -163,29 +163,11 @@ export default async function DashboardHomePage() {
       {/* Status Cards */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Social Connections */}
-        <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
-          <div>
-            <span className="mb-2 block font-semibold">Social Connections</span>
-            {!isTwitterConnected && (
-              <div className="mb-2 flex items-center gap-2 text-sm text-red-500">
-                <AlertCircle className="h-4 w-4" /> Twitter not connected
-              </div>
-            )}
-            {!isBlueskyConnected && (
-              <div className="mb-2 flex items-center gap-2 text-sm text-red-500">
-                <AlertCircle className="h-4 w-4" /> Bluesky not connected
-              </div>
-            )}
-            {isTwitterConnected && isBlueskyConnected && (
-              <div className="text-airlume flex flex-row items-center gap-2 text-sm">
-                <Check className="h-4 w-4" /> All social accounts connected!
-              </div>
-            )}
-          </div>
-          <Button className="w-fit" variant="outline">
-            <Link href={`/${user.username}/settings`}>Manage Connections</Link>
-          </Button>
-        </Card>
+        <SocialConnectionsCard
+          isTwitterConnected={isTwitterConnected}
+          isBlueskyConnected={isBlueskyConnected}
+          username={user.username ?? ""}
+        />
 
         {/* Next scheduled post card */}
         <Card className="bg-background shadow-custom flex flex-col justify-start border-none p-6">
@@ -239,7 +221,7 @@ export default async function DashboardHomePage() {
         {/* Gallery card */}
         <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
           <span className="mb-2 block font-semibold">Media Library</span>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex h-full w-full items-center justify-center gap-2">
             {galleryImages.length === 0 && (
               <div className="flex h-full flex-col items-center justify-center">
                 <NotImageFound
