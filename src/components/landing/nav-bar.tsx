@@ -76,10 +76,10 @@ export default function NavBar() {
 
           <div className="flex items-center gap-2">
             <SignedOut>
-              <SignInButton>
+              <SignInButton mode="modal" forceRedirectUrl={`/dashboard`}>
                 <Button variant="custom">Sign in</Button>
               </SignInButton>
-              <SignUpButton>
+              <SignUpButton mode="modal" forceRedirectUrl={`/dashboard`}>
                 <Button variant="outline">Sign up</Button>
               </SignUpButton>
             </SignedOut>
@@ -138,13 +138,10 @@ export default function NavBar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link href="#features">Features</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="#services">Services</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
                   <Link href="#about">About Us</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="#features">Features</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="#faq">FAQ</Link>
@@ -152,12 +149,12 @@ export default function NavBar() {
                 <DropdownMenuSeparator />
                 <SignedOut>
                   <DropdownMenuItem asChild>
-                    <SignInButton mode="modal">
+                    <SignInButton mode="modal" forceRedirectUrl={`/dashboard`}>
                       <span>Sign in</span>
                     </SignInButton>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <SignUpButton mode="modal">
+                    <SignUpButton mode="modal" forceRedirectUrl={`/dashboard`}>
                       <span>Sign up</span>
                     </SignUpButton>
                   </DropdownMenuItem>
