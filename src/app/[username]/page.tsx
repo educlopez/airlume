@@ -283,13 +283,54 @@ export default async function DashboardHomePage() {
           </div>
         </Card>
         {/* Recent Activity */}
-        <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
-          <span className="mb-2 block font-semibold">Recent Activity</span>
-          <ul className="ml-5 list-disc text-sm">
-            <li>{publishedCount} posts published this week</li>
-            <li>{draftCountRecent} drafts edited</li>
-            <li>{imageCount} images uploaded</li>
-          </ul>
+        <Card className="bg-background shadow-custom flex flex-row items-center justify-between overflow-hidden border-none p-6">
+          {/* Left: Activity List */}
+          <div className="flex-1 pr-4">
+            <span className="mb-2 block font-semibold">Recent Activity</span>
+            <ul className="ml-5 list-disc text-sm">
+              <li>{publishedCount} posts published this week</li>
+              <li>{draftCountRecent} drafts edited</li>
+              <li>{imageCount} images uploaded</li>
+            </ul>
+          </div>
+          {/* Right: Animated Post Preview */}
+          <div className="flex flex-1 items-center justify-center">
+            <Link
+              href={`/${user.username}/generator`}
+              className="shadow-custom group bg-primary relative w-full max-w-xs cursor-pointer rounded-lg transition-transform duration-300 hover:scale-105"
+            >
+              <div className="bg-primary/10 border-primary/20 flex flex-col gap-2 rounded-lg border p-4">
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={user.imageUrl || "https://github.com/educlopez.png"}
+                    alt="User avatar"
+                    width={32}
+                    height={32}
+                    className="border-primary/30 shadow-custom h-10 w-10 rounded border"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-semibold">
+                      {user.username || "user"}
+                    </span>
+                    <span className="text-muted-foreground block text-xs">
+                      Just now
+                    </span>
+                  </div>
+                </div>
+                <div className="text-foreground/90 text-sm">
+                  {Number(publishedCount) > 0
+                    ? `Just published ${publishedCount} post${Number(publishedCount) > 1 ? "s" : ""}! 🚀`
+                    : Number(draftCountRecent) > 0
+                      ? `Working on ${draftCountRecent} draft${Number(draftCountRecent) > 1 ? "s" : ""}... ✍️`
+                      : Number(imageCount) > 0
+                        ? `Uploaded ${imageCount} image${Number(imageCount) > 1 ? "s" : ""} to the gallery! 🖼️`
+                        : "Start creating to see your activity here!"}
+                </div>
+              </div>
+              {/* Animated background accent */}
+              <div className="from-primary/20 to-primary/5 pointer-events-none absolute top-0 left-0 -z-10 h-full w-full rounded-lg bg-gradient-to-br opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
+            </Link>
+          </div>
         </Card>
       </div>
     </div>
