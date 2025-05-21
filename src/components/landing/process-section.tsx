@@ -5,7 +5,10 @@ import SettingsImage from "@/assets/images/settings.png"
 
 export default function ProcessSection() {
   return (
-    <section className="bg-primary shadow-custom relative overflow-hidden px-4 py-28 sm:px-8">
+    <section
+      id="features"
+      className="bg-primary shadow-custom relative overflow-hidden px-4 py-28 sm:px-8"
+    >
       <div className="relative mx-auto max-w-5xl">
         <h2 className="text-foreground mb-14 text-center text-4xl font-extrabold tracking-tight">
           How does it work?

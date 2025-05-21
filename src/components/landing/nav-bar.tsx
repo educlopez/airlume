@@ -54,23 +54,18 @@ export default function NavBar() {
           </div>
           <nav className="text-foreground/70 hidden items-center justify-center gap-10 text-base font-medium md:flex">
             <Link
-              href="#features"
-              className="hover:text-foreground flex min-w-fit items-center justify-center transition"
-            >
-              Features
-            </Link>
-            <Link
-              href="#services"
-              className="hover:text-foreground flex min-w-fit items-center justify-center transition"
-            >
-              Services
-            </Link>
-            <Link
               href="#about"
               className="hover:text-foreground flex min-w-fit items-center justify-center transition"
             >
               About Us
             </Link>
+            <Link
+              href="#features"
+              className="hover:text-foreground flex min-w-fit items-center justify-center transition"
+            >
+              Features
+            </Link>
+
             <Link
               href="#faq"
               className="hover:text-foreground flex min-w-fit items-center justify-center transition"
