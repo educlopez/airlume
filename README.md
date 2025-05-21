@@ -49,6 +49,7 @@ A modern AI-powered tool to generate social media posts using smart presets, reu
 - **User Dashboard:** Manage drafts, scheduled posts, and media assets in a streamlined interface.
 - **Social Integrations:** Connect and publish directly to Twitter/X and Bluesky.
 - **Media Library:** Store and manage images for your posts.
+- **CRON Jobs:** Schedule posts to publish at specific times with trigger.dev.
 - **Modern UI:** Built with Next.js App Router, Tailwind CSS v4, and Shadcn/UI for a beautiful, responsive experience.
 
 ---
@@ -87,6 +88,7 @@ export default function RootLayout({ children }) {
 - **Backend:** Supabase (Edge Functions)
 - **Authentication:** Clerk.dev
 - **AI Integration:** OpenAI GPT models via Vercel AI SDK
+- **CRON Jobs:** Trigger.dev
 - **Package Manager:** pnpm
 
 ---
