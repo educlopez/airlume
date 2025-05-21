@@ -263,7 +263,7 @@ export default async function DashboardHomePage() {
       {/* Promo Bluesky + Recent Activity */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Bluesky promo */}
-        <Card className="bg-background shadow-custom flex flex-row items-center justify-between overflow-hidden border-none p-6">
+        <Card className="bg-background shadow-custom flex flex-col items-center justify-between overflow-hidden border-none p-6 md:flex-row">
           <div className="flex-1 pr-4">
             <span className="mb-2 block font-semibold">
               Publish your photos in Bluesky!
@@ -274,7 +274,7 @@ export default async function DashboardHomePage() {
             </p>
           </div>
           <div className="group relative flex-1">
-            <div className="absolute -right-20 -bottom-40 transition-all duration-300 group-hover:-bottom-36">
+            <div className="-right-20 -bottom-40 transition-all duration-300 group-hover:-bottom-36 md:absolute">
               <BlueskyPromoImage
                 src="https://github.com/educlopez.png"
                 alt="Bluesky avatar user preview"
@@ -283,7 +283,7 @@ export default async function DashboardHomePage() {
           </div>
         </Card>
         {/* Recent Activity */}
-        <Card className="bg-background shadow-custom flex flex-row items-center justify-between overflow-hidden border-none p-6">
+        <Card className="bg-background shadow-custom flex flex-col justify-between overflow-hidden border-none p-6 md:flex-row md:items-center">
           {/* Left: Activity List */}
           <div className="flex-1 pr-4">
             <span className="mb-2 block font-semibold">Recent Activity</span>
