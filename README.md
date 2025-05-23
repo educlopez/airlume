@@ -15,7 +15,7 @@ A modern AI-powered tool to generate social media posts using smart presets, reu
 ## 🖼️ Screenshots
 
 <p align="center">
-  <img src="public/github/Landing.gif" alt="Landing Gif" width="600" style="max-width: 100%; width: 100%; height: auto;"/>
+  <img src="public/github/landing.gif" alt="Landing Gif" width="600" style="max-width: 100%; width: 100%; height: auto;"/>
   <br/>
   <em>Landing Demo</em>
 </p>
