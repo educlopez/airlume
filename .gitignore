@@ -53,3 +53,4 @@ next-env.d.ts
 .trigger
 
 SUBMISSION.md
+.env
