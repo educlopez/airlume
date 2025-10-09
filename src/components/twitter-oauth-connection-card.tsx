@@ -127,7 +127,8 @@ export function TwitterOAuthConnectionCard() {
           </Button>
           <div className="text-foreground/70 mt-2 text-xs">
             <strong>Note:</strong> This will redirect you to Twitter to
-            authorize the app. You'll be redirected back after authorization.
+            authorize the app. You&apos;ll be redirected back after
+            authorization.
           </div>
         </div>
       )}

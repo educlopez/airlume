@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
         console.log("[TWITTER PUBLISH] Using OAuth 1.0a for media upload");
 
         // Handle image upload
-        let imageBuffer: ArrayBuffer;
+        let imageBuffer: Buffer;
 
         if (imageBase64) {
           imageBuffer = Buffer.from(imageBase64, "base64");
@@ -158,7 +158,8 @@ export async function POST(req: NextRequest) {
           if (!imageResponse.ok) {
             throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
           }
-          imageBuffer = await imageResponse.arrayBuffer();
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          imageBuffer = Buffer.from(arrayBuffer);
         } else {
           throw new Error("No image data provided");
         }
@@ -166,7 +167,7 @@ export async function POST(req: NextRequest) {
         console.log("[TWITTER PUBLISH] Image size:", imageBuffer.byteLength, "bytes");
 
         // Upload media using OAuth 1.0a client
-        const mediaId = await twitterClient.v1.uploadMedia(Buffer.from(imageBuffer), {
+        const mediaId = await twitterClient.v1.uploadMedia(imageBuffer, {
           mimeType: "image/png",
         });
 
