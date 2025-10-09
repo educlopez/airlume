@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { Eye, EyeOff, Info } from "lucide-react"
 
+import { TwitterOAuthConnectionCard } from "@/components/twitter-oauth-connection-card"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -315,6 +316,9 @@ export default function SettingsPage() {
           {blueskyStatus && (
             <div className="text-airlume text-sm">{blueskyStatus}</div>
           )}
+        </Card>
+        <Card className="shadow-custom space-y-4 border-none p-6">
+          <TwitterOAuthConnectionCard />
         </Card>
       </div>
     </div>

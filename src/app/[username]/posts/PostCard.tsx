@@ -122,6 +122,7 @@ export function PostCard({
   const [loadingBluesky] = useState(false)
   const [hasBluesky, setHasBluesky] = useState(false)
   const [hasLinkedIn, setHasLinkedIn] = useState(false)
+  const [hasTwitterOAuth1, setHasTwitterOAuth1] = useState(false)
   const [publishModalOpen, setPublishModalOpen] = useState(false)
   const [publishTwitter, setPublishTwitter] = useState(false)
   const [publishBluesky, setPublishBluesky] = useState(false)
@@ -232,17 +233,45 @@ export function PostCard({
     let anySuccess = false
     // Twitter
     if (publishTwitter) {
+      let imageBase64 = null
+      // If we have an image and OAuth 1.0a connection, include it
+      if (imageUrl && hasTwitterOAuth1) {
+        try {
+          const res = await fetch(imageUrl)
+          const blob = await res.blob()
+          imageBase64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () =>
+              resolve((reader.result as string).split(",")[1])
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+          })
+        } catch {
+          toast.error("Could not read image for Twitter upload.")
+          setPublishing(false)
+          return
+        }
+      }
+
       const res = await fetch("/api/twitter/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postContent: response, id: generation.id }),
+        body: JSON.stringify({
+          postContent: response,
+          id: generation.id,
+          imageBase64: imageBase64 || undefined,
+        }),
       })
       if (res.ok) {
         toast.success("Published to Twitter!")
         anySuccess = true
       } else {
         const data = await res.json()
-        toast.error(data.error || "Failed to publish to Twitter.")
+        if (data.needsOAuth1) {
+          toast.error("Please connect Twitter via Settings to post images")
+        } else {
+          toast.error(data.error || "Failed to publish to Twitter.")
+        }
       }
     }
     // Bluesky
@@ -527,6 +556,18 @@ export function PostCard({
         console.error("[PostCard] Error checking LinkedIn:", error)
         setHasLinkedIn(false)
       })
+
+    // Check Twitter OAuth 1.0a connection for image support
+    fetch("/api/twitter/oauth/status", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("[PostCard] Twitter OAuth 1.0a data:", data)
+        setHasTwitterOAuth1(data.connected || false)
+      })
+      .catch((error) => {
+        console.error("[PostCard] Error checking Twitter OAuth 1.0a:", error)
+        setHasTwitterOAuth1(false)
+      })
   }, [])
 
   return (
@@ -584,7 +625,7 @@ export function PostCard({
                   <Pencil className="size-4" /> Edit
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-full max-w-4xl min-w-2xl p-8">
+              <DialogContent className="min-w-2xl w-full max-w-4xl p-8">
                 <DialogHeader>
                   <DialogTitle>Edit Draft</DialogTitle>
                 </DialogHeader>
@@ -605,7 +646,7 @@ export function PostCard({
                       </span>
                     </div>
                     <textarea
-                      className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:ring focus:outline-none"
+                      className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:outline-none focus:ring"
                       value={response}
                       onChange={(e) => setResponse(e.target.value)}
                     />
@@ -627,7 +668,7 @@ export function PostCard({
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="absolute -top-2 -right-2"
+                            className="absolute -right-2 -top-2"
                             onClick={() => {
                               setImageUrl("")
                               setImageUrlFromLibrary(null)
@@ -867,14 +908,20 @@ export function PostCard({
               <Checkbox
                 checked={publishTwitter}
                 onCheckedChange={(v) => setPublishTwitter(!!v)}
-                disabled={!!imageUrl || !hasTwitter}
+                disabled={!hasTwitter || (!!imageUrl && !hasTwitterOAuth1)}
               />
               <span>Twitter/X</span>
-              {imageUrl && (
-                <span className="ml-2 text-xs text-yellow-600">
-                  (Images not supported for Twitter/X at the moment)
-                </span>
-              )}
+              {!hasTwitter ? null : imageUrl ? (
+                hasTwitterOAuth1 ? (
+                  <span className="ml-2 text-xs text-green-600">
+                    ✓ Images supported
+                  </span>
+                ) : (
+                  <span className="ml-2 text-xs text-yellow-600">
+                    (Connect Twitter in Settings for images)
+                  </span>
+                )
+              ) : null}
             </label>
             <label className="flex items-center gap-2">
               <Checkbox
@@ -967,7 +1014,7 @@ export function PostCard({
                     </span>
                   </label>
                   <div className="relative">
-                    <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                       @
                     </span>
                     <input
@@ -1012,7 +1059,7 @@ export function PostCard({
                     />
                     <button
                       type="button"
-                      className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
                       onClick={() => setShowPassword((v) => !v)}
                       tabIndex={-1}
                     >

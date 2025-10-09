@@ -1,13 +1,38 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { TwitterApi } from "twitter-api-v2";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createServerSupabaseClient } from "@/lib/supabaseClient";
+import crypto from "crypto";
+
+const ALGO = "aes-256-gcm";
+const IV_LENGTH = 12;
+const KEY = process.env.TWITTER_ENCRYPTION_KEY;
+
+if (KEY && KEY.length !== 32) {
+  throw new Error("TWITTER_ENCRYPTION_KEY must be 32 chars");
+}
+
+function decrypt(enc: string): string {
+  if (!KEY) throw new Error("TWITTER_ENCRYPTION_KEY is not set");
+  const b = Buffer.from(enc, "base64");
+  const iv = b.slice(0, IV_LENGTH);
+  const tag = b.slice(IV_LENGTH, IV_LENGTH + 16);
+  const encrypted = b.slice(IV_LENGTH + 16);
+  const decipher = crypto.createDecipheriv(ALGO, Buffer.from(KEY), iv);
+  decipher.setAuthTag(tag);
+  let decrypted = decipher.update(encrypted);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString("utf8");
+}
 
 // See: https://clerk.com/docs/authentication/social-connections/overview#get-an-oauth-access-token-for-a-social-provider
 
 export async function POST(req: NextRequest) {
   try {
     console.log(">>> /api/twitter/publish endpoint HIT <<<");
-    const { postContent, id, userId: userIdFromBody } = await req.json();
+    const { postContent, id, userId: userIdFromBody, imageUrl, imageBase64 } = await req.json();
     let userId = userIdFromBody;
 
     // Si no viene en el body, intenta obtenerlo de Clerk (para el caso manual)
@@ -59,7 +84,7 @@ export async function POST(req: NextRequest) {
     console.log("[TWITTER PUBLISH] providerKey:", providerKey);
 
     // Solo usa provider keys permitidos por Clerk
-    let tokensResponse;
+    let tokensResponse: Awaited<ReturnType<typeof client.users.getUserOauthAccessToken>>;
     if (providerKey === "oauth_x" || providerKey === "x") {
       tokensResponse = await client.users.getUserOauthAccessToken(userId, "oauth_x");
     } else if (providerKey === "oauth_twitter" || providerKey === "twitter") {
@@ -76,19 +101,108 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No Twitter/X access token found.", debug: { userId, externalAccounts, providerKey, tokensResponse } }, { status: 400 });
     }
 
-    // Post the tweet (text only) using fetch
+    // Check if user has OAuth 1.0a tokens for media upload
+    let twitterClient: TwitterApi | null = null;
+    const mediaIds: string[] = [];
+
+    if (imageUrl || imageBase64) {
+      // Try to get OAuth 1.0a tokens for media upload
+      const { data: oauth1Data, error: oauth1Error } = await supabaseAdmin
+        .from("twitter_tokens")
+        .select("oauth_token, oauth_token_secret")
+        .eq("user_id", userId)
+        .single();
+
+      if (oauth1Error || !oauth1Data) {
+        console.log("[TWITTER PUBLISH] No OAuth 1.0a tokens found for media upload");
+        return NextResponse.json(
+          {
+            error: "Image uploads require Twitter OAuth 1.0a connection",
+            details: "Please connect your Twitter account via Settings to enable image uploads.",
+            needsOAuth1: true,
+          },
+          { status: 400 }
+        );
+      }
+
+      try {
+        // Decrypt tokens
+        const decryptedToken = decrypt(oauth1Data.oauth_token);
+        const decryptedSecret = decrypt(oauth1Data.oauth_token_secret);
+
+        // Create Twitter client with OAuth 1.0a
+        const apiKey = process.env.TWITTER_API_KEY;
+        const apiSecret = process.env.TWITTER_API_SECRET;
+
+        if (!apiKey || !apiSecret) {
+          throw new Error("Twitter API credentials not configured");
+        }
+
+        twitterClient = new TwitterApi({
+          appKey: apiKey,
+          appSecret: apiSecret,
+          accessToken: decryptedToken,
+          accessSecret: decryptedSecret,
+        });
+
+        console.log("[TWITTER PUBLISH] Using OAuth 1.0a for media upload");
+
+        // Handle image upload
+        let imageBuffer: ArrayBuffer;
+
+        if (imageBase64) {
+          imageBuffer = Buffer.from(imageBase64, "base64");
+        } else if (imageUrl) {
+          console.log("[TWITTER PUBLISH] Fetching image from:", imageUrl);
+          const imageResponse = await fetch(imageUrl);
+          if (!imageResponse.ok) {
+            throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
+          }
+          imageBuffer = await imageResponse.arrayBuffer();
+        } else {
+          throw new Error("No image data provided");
+        }
+
+        console.log("[TWITTER PUBLISH] Image size:", imageBuffer.byteLength, "bytes");
+
+        // Upload media using OAuth 1.0a client
+        const mediaId = await twitterClient.v1.uploadMedia(Buffer.from(imageBuffer), {
+          mimeType: "image/png",
+        });
+
+        console.log("[TWITTER PUBLISH] Media uploaded successfully, media_id:", mediaId);
+        mediaIds.push(mediaId);
+
+      } catch (error) {
+        console.error("[TWITTER PUBLISH] Error during image upload:", error);
+        return NextResponse.json(
+          {
+            error: "Failed to process image for Twitter",
+            details: error instanceof Error ? error.message : String(error),
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Post the tweet with optional media
+    const tweetBody: { text: string; media?: { media_ids: string[] } } = { text: postContent };
+    if (mediaIds.length > 0) {
+      tweetBody.media = { media_ids: mediaIds };
+    }
+
     const twitterRes = await fetch("https://api.twitter.com/2/tweets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: postContent }),
+      body: JSON.stringify(tweetBody),
     });
     const tweetText = await twitterRes.text();
     // LOG: respuesta cruda de Twitter
     console.log("[TWITTER PUBLISH] Twitter API response:", tweetText);
-    let data;
+    let data: unknown;
     try {
       data = JSON.parse(tweetText);
     } catch {

@@ -56,15 +56,42 @@ export const scheduledPostTask = schedules.task({
             userId: post.user_id,
           });
         }
+        // Prepare payload based on platform
+        const payload: {
+          postContent: string;
+          id: string;
+          userId: string;
+          imageUrl?: string | null;
+          imageBase64?: string | null;
+        } = {
+          postContent: post.response,
+          id: post.id,
+          userId: post.user_id,
+        };
+
+        // Note: Twitter doesn't support images with OAuth 2.0 (API limitation)
+        // For Bluesky, need to convert to base64
+        // For LinkedIn, send imageUrl directly
+        if (row.platform === "linkedin") {
+          payload.imageUrl = post.image_url || null;
+        } else if (row.platform === "bluesky" && post.image_url) {
+          // Convert image to base64 for Bluesky
+          try {
+            const imageRes = await fetch(post.image_url);
+            const blob = await imageRes.blob();
+            const arrayBuffer = await blob.arrayBuffer();
+            const base64 = Buffer.from(arrayBuffer).toString("base64");
+            payload.imageBase64 = base64;
+          } catch (err) {
+            console.error("Failed to convert image to base64 for Bluesky:", err);
+          }
+        }
+        // Twitter: Don't send image data (not supported with OAuth 2.0)
+
         const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            postContent: post.response,
-            id: post.id,
-            userId: post.user_id,
-            imageUrl: post.image_url || null
-          }),
+          body: JSON.stringify(payload),
         });
         const json = await res.json();
         console.log(`${row.platform.toUpperCase()} PUBLISH RESPONSE:`, JSON.stringify(json));
