@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // Define the type for the raw Supabase response
 interface ScheduleRaw {
   id: string
-  platform: "twitter" | "bluesky"
+  platform: "twitter" | "bluesky" | "linkedin"
   status: "queue" | "sent" | "failed"
   scheduled_at: string
   error_message?: string | null
@@ -113,17 +113,26 @@ export default async function PostsPage() {
   const queueBluesky = schedules.filter(
     (s) => s.status === "queue" && s.platform === "bluesky"
   )
+  const queueLinkedIn = schedules.filter(
+    (s) => s.status === "queue" && s.platform === "linkedin"
+  )
   const sentTwitter = schedules.filter(
     (s) => s.status === "sent" && s.platform === "twitter"
   )
   const sentBluesky = schedules.filter(
     (s) => s.status === "sent" && s.platform === "bluesky"
   )
+  const sentLinkedIn = schedules.filter(
+    (s) => s.status === "sent" && s.platform === "linkedin"
+  )
   const failedTwitter = schedules.filter(
     (s) => s.status === "failed" && s.platform === "twitter"
   )
   const failedBluesky = schedules.filter(
     (s) => s.status === "failed" && s.platform === "bluesky"
+  )
+  const failedLinkedIn = schedules.filter(
+    (s) => s.status === "failed" && s.platform === "linkedin"
   )
 
   // Direct-published sent posts (not in generations_platforms)
@@ -200,7 +209,7 @@ export default async function PostsPage() {
           </div>
         </TabsContent>
         <TabsContent value="queue">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
                 <span className="text-airlume">Twitter</span>
@@ -259,10 +268,39 @@ export default async function PostsPage() {
                 />
               ))}
             </div>
+            <div className="flex flex-col gap-4">
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-airlume">LinkedIn</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs text-indigo-800">
+                  {queueLinkedIn.length}
+                </span>
+              </div>
+              {queueLinkedIn.length === 0 && (
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoScheduledPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No scheduled posts.
+                  </span>
+                </Card>
+              )}
+              {queueLinkedIn.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="sent">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
                 <span className="text-airlume">Twitter</span>
@@ -331,10 +369,39 @@ export default async function PostsPage() {
                 />
               ))}
             </div>
+            <div className="flex flex-col gap-4">
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-airlume">LinkedIn</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs text-indigo-800">
+                  {sentLinkedIn.length}
+                </span>
+              </div>
+              {sentLinkedIn.length === 0 && (
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No sent posts.
+                  </span>
+                </Card>
+              )}
+              {sentLinkedIn.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="failed">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             <div className="flex flex-col gap-4">
               <div className="mb-2 flex items-center gap-2 font-semibold">
                 <span className="text-airlume">Twitter</span>
@@ -384,6 +451,35 @@ export default async function PostsPage() {
                 </Card>
               )}
               {failedBluesky.map((s) => (
+                <PostCard
+                  key={s.id}
+                  generation={getGenerationFromSchedule(s)}
+                  user={safeUser}
+                  hasTwitter={hasTwitter}
+                  schedule={getScheduleWithGeneration(s)}
+                />
+              ))}
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="mb-2 flex items-center gap-2 font-semibold">
+                <span className="text-airlume">LinkedIn</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs text-indigo-800">
+                  {failedLinkedIn.length}
+                </span>
+              </div>
+              {failedLinkedIn.length === 0 && (
+                <Card className="bg-background shadow-custom flex flex-col items-center justify-start border-none">
+                  <NoPosts
+                    primaryColor="var(--color-airlume)"
+                    backgroundColor="var(--color-primary)"
+                    className="ml-2"
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    No failed posts.
+                  </span>
+                </Card>
+              )}
+              {failedLinkedIn.map((s) => (
                 <PostCard
                   key={s.id}
                   generation={getGenerationFromSchedule(s)}

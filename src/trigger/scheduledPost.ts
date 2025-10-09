@@ -35,13 +35,22 @@ export const scheduledPostTask = schedules.task({
           endpoint = `${process.env.NEXT_PUBLIC_BASE_URL}/api/twitter/publish`;
         } else if (row.platform === "bluesky") {
           endpoint = `${process.env.NEXT_PUBLIC_BASE_URL}/api/bluesky/publish`;
+        } else if (row.platform === "linkedin") {
+          endpoint = `${process.env.NEXT_PUBLIC_BASE_URL}/api/linkedin/publish`;
         } else {
           console.warn("Unknown platform:", row.platform);
           continue;
         }
-        // LOG: payload para Bluesky
+        // LOG: payload for debugging
         if (row.platform === "bluesky") {
           console.log("BLUESKY PUBLISH PAYLOAD:", {
+            postContent: post.response,
+            id: post.id,
+            userId: post.user_id,
+          });
+        }
+        if (row.platform === "linkedin") {
+          console.log("LINKEDIN PUBLISH PAYLOAD:", {
             postContent: post.response,
             id: post.id,
             userId: post.user_id,
@@ -50,7 +59,12 @@ export const scheduledPostTask = schedules.task({
         const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ postContent: post.response, id: post.id, userId: post.user_id }),
+          body: JSON.stringify({
+            postContent: post.response,
+            id: post.id,
+            userId: post.user_id,
+            imageUrl: post.image_url || null
+          }),
         });
         const json = await res.json();
         console.log(`${row.platform.toUpperCase()} PUBLISH RESPONSE:`, JSON.stringify(json));

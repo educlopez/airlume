@@ -11,12 +11,14 @@ import { UserProfileDialog } from "@/components/user-profile-dialog"
 interface SocialConnectionsCardProps {
   isTwitterConnected: boolean
   isBlueskyConnected: boolean
+  isLinkedInConnected: boolean
   username: string
 }
 
 export function SocialConnectionsCard({
   isTwitterConnected,
   isBlueskyConnected,
+  isLinkedInConnected,
   username,
 }: SocialConnectionsCardProps) {
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
@@ -53,7 +55,24 @@ export function SocialConnectionsCard({
             </span>
           </div>
         )}
-        {isTwitterConnected && isBlueskyConnected && (
+        {!isLinkedInConnected && (
+          <div className="mb-2 flex flex-col gap-1 text-sm text-red-500">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" /> LinkedIn not connected
+            </div>
+            <span className="text-muted-foreground text-xs">
+              To connect LinkedIn, add the account from the Clerk account modal.{" "}
+              <Button
+                variant="link"
+                className="text-foreground h-auto p-0 align-baseline text-xs"
+                onClick={() => setAccountDialogOpen(true)}
+              >
+                Open Clerk account modal
+              </Button>
+            </span>
+          </div>
+        )}
+        {isTwitterConnected && isBlueskyConnected && isLinkedInConnected && (
           <div className="text-airlume flex flex-row items-center gap-2 text-sm">
             <Check className="h-4 w-4" /> All social accounts connected!
           </div>

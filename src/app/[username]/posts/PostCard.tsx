@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner"
 
 import { SocialBluesky } from "@/components/icons/social-bluesky"
+import { SocialLinkedIn } from "@/components/icons/social-linkedin"
 import { SocialX } from "@/components/icons/social-x"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -60,7 +61,7 @@ export type Generation = {
 
 export type Schedule = {
   id: string
-  platform: "twitter" | "bluesky"
+  platform: "twitter" | "bluesky" | "linkedin"
   status: "queue" | "sent" | "failed"
   scheduled_at: string
   error_message?: string | null
@@ -77,7 +78,7 @@ type User = {
 }
 
 export type PlatformStatus = {
-  platform: "twitter" | "bluesky"
+  platform: "twitter" | "bluesky" | "linkedin"
   status: "queue" | "sent" | "failed"
   scheduled_at?: string
   error_message?: string | null
@@ -120,13 +121,16 @@ export function PostCard({
   const [showPassword, setShowPassword] = useState(false)
   const [loadingBluesky] = useState(false)
   const [hasBluesky, setHasBluesky] = useState(false)
+  const [hasLinkedIn, setHasLinkedIn] = useState(false)
   const [publishModalOpen, setPublishModalOpen] = useState(false)
   const [publishTwitter, setPublishTwitter] = useState(false)
   const [publishBluesky, setPublishBluesky] = useState(false)
+  const [publishLinkedIn, setPublishLinkedIn] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
   const [scheduleTwitter, setScheduleTwitter] = useState(false)
   const [scheduleBluesky, setScheduleBluesky] = useState(false)
+  const [scheduleLinkedIn, setScheduleLinkedIn] = useState(false)
   const [scheduledDateTwitter, setScheduledDateTwitter] = useState<
     Date | undefined
   >()
@@ -135,6 +139,10 @@ export function PostCard({
     Date | undefined
   >()
   const [scheduledTimeBluesky, setScheduledTimeBluesky] = useState("")
+  const [scheduledDateLinkedIn, setScheduledDateLinkedIn] = useState<
+    Date | undefined
+  >()
+  const [scheduledTimeLinkedIn, setScheduledTimeLinkedIn] = useState("")
   const [scheduling, setScheduling] = useState(false)
   const [editPlatform, setEditPlatform] = useState<null | {
     platform: string
@@ -275,6 +283,26 @@ export function PostCard({
         toast.error(data.error || "Failed to publish to Bluesky.")
       }
     }
+    // LinkedIn
+    if (publishLinkedIn) {
+      const res = await fetch("/api/linkedin/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postContent: response,
+          id: generation.id,
+          imageUrl: imageUrl || null,
+          imageAlt: imageAlt || "",
+        }),
+      })
+      if (res.ok) {
+        toast.success("Published to LinkedIn!")
+        anySuccess = true
+      } else {
+        const data = await res.json()
+        toast.error(data.error || "Failed to publish to LinkedIn.")
+      }
+    }
     setPublishing(false)
     setPublishModalOpen(false)
     if (anySuccess) router.refresh()
@@ -369,6 +397,15 @@ export function PostCard({
       d.setMilliseconds(0)
       platforms.push({ platform: "bluesky", scheduled_at: d.toISOString() })
     }
+    if (scheduleLinkedIn && scheduledDateLinkedIn && scheduledTimeLinkedIn) {
+      const [h, m] = scheduledTimeLinkedIn.split(":")
+      const d = new Date(scheduledDateLinkedIn)
+      d.setHours(Number(h))
+      d.setMinutes(Number(m))
+      d.setSeconds(0)
+      d.setMilliseconds(0)
+      platforms.push({ platform: "linkedin", scheduled_at: d.toISOString() })
+    }
     if (platforms.length === 0) return
     setScheduling(true)
     await scheduleGenerationMultiPlatform({ id: generation.id, platforms })
@@ -416,7 +453,9 @@ export function PostCard({
         ? "/api/twitter/publish"
         : platform === "bluesky"
           ? "/api/bluesky/publish"
-          : null
+          : platform === "linkedin"
+            ? "/api/linkedin/publish"
+            : null
     if (!endpoint) return
     const res = await fetch(endpoint, {
       method: "POST",
@@ -460,7 +499,7 @@ export function PostCard({
 
   useEffect(() => {
     // Check Bluesky connection on mount
-    fetch("/api/bluesky")
+    fetch("/api/bluesky", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (data && data.handle) {
@@ -471,6 +510,23 @@ export function PostCard({
         }
       })
       .catch(() => setHasBluesky(false))
+
+    // Check LinkedIn connection on mount with cache busting
+    fetch(`/api/linkedin?t=${Date.now()}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("[PostCard] LinkedIn connection data:", data)
+        if (data && data.connected) {
+          setHasLinkedIn(true)
+        } else {
+          setHasLinkedIn(false)
+          console.log("[PostCard] LinkedIn not connected. Debug:", data.debug)
+        }
+      })
+      .catch((error) => {
+        console.error("[PostCard] Error checking LinkedIn:", error)
+        setHasLinkedIn(false)
+      })
   }, [])
 
   return (
@@ -485,6 +541,9 @@ export function PostCard({
               )}
               {platform === "bluesky" && (
                 <SocialBluesky className="text-airlume size-4" />
+              )}
+              {platform === "linkedin" && (
+                <SocialLinkedIn className="text-airlume size-4" />
               )}
             </div>
           )}
@@ -788,6 +847,7 @@ export function PostCard({
                   setPublishModalOpen(true)
                   setPublishTwitter(false)
                   setPublishBluesky(false)
+                  setPublishLinkedIn(false)
                 }}
               >
                 Publish
@@ -812,7 +872,7 @@ export function PostCard({
               <span>Twitter/X</span>
               {imageUrl && (
                 <span className="ml-2 text-xs text-yellow-600">
-                  (No se pueden publicar imágenes en Twitter/X por el momento)
+                  (Images not supported for Twitter/X at the moment)
                 </span>
               )}
             </label>
@@ -840,6 +900,24 @@ export function PostCard({
                 </span>
               )}
             </label>
+            <label className="flex items-center gap-2">
+              <Checkbox
+                checked={publishLinkedIn}
+                onCheckedChange={(v) => setPublishLinkedIn(!!v)}
+                disabled={!hasLinkedIn}
+              />
+              <span>LinkedIn</span>
+              {!hasLinkedIn ? (
+                <span className="ml-2 text-xs text-gray-500">
+                  Connect your LinkedIn account in Account settings to enable
+                  this option.
+                </span>
+              ) : imageUrl ? (
+                <span className="ml-2 text-xs text-green-600">
+                  ✓ Images supported
+                </span>
+              ) : null}
+            </label>
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -850,7 +928,10 @@ export function PostCard({
             <Button
               variant="custom"
               onClick={handleMultiPublish}
-              disabled={publishing || (!publishTwitter && !publishBluesky)}
+              disabled={
+                publishing ||
+                (!publishTwitter && !publishBluesky && !publishLinkedIn)
+              }
             >
               {publishing ? "Publishing..." : "Publish"}
             </Button>
@@ -1071,6 +1152,43 @@ export function PostCard({
                 </div>
               </div>
             )}
+            <label className="flex items-center gap-2">
+              <Checkbox
+                checked={scheduleLinkedIn}
+                onCheckedChange={(v) => setScheduleLinkedIn(!!v)}
+                disabled={!hasLinkedIn}
+              />
+              <span>LinkedIn</span>
+              {!hasLinkedIn && (
+                <span className="ml-2 text-xs text-gray-500">
+                  Connect your LinkedIn account in Account settings to enable
+                  this option.
+                </span>
+              )}
+            </label>
+            {scheduleLinkedIn && (
+              <div className="ml-4 flex items-end gap-4">
+                <div>
+                  <label className="font-medium">Date (LinkedIn):</label>
+                  <Calendar
+                    mode="single"
+                    selected={scheduledDateLinkedIn}
+                    onSelect={setScheduledDateLinkedIn}
+                    fromDate={new Date()}
+                    className="rounded-md border"
+                  />
+                </div>
+                <div>
+                  <label className="font-medium">Time (LinkedIn):</label>
+                  <Input
+                    type="time"
+                    value={scheduledTimeLinkedIn}
+                    onChange={(e) => setScheduledTimeLinkedIn(e.target.value)}
+                    className="w-32"
+                  />
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -1083,11 +1201,13 @@ export function PostCard({
               onClick={handleScheduleMulti}
               disabled={
                 scheduling ||
-                (!scheduleTwitter && !scheduleBluesky) ||
+                (!scheduleTwitter && !scheduleBluesky && !scheduleLinkedIn) ||
                 (scheduleTwitter &&
                   (!scheduledDateTwitter || !scheduledTimeTwitter)) ||
                 (scheduleBluesky &&
-                  (!scheduledDateBluesky || !scheduledTimeBluesky))
+                  (!scheduledDateBluesky || !scheduledTimeBluesky)) ||
+                (scheduleLinkedIn &&
+                  (!scheduledDateLinkedIn || !scheduledTimeLinkedIn))
               }
             >
               {scheduling ? "Scheduling..." : "Add to Queue"}

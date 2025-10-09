@@ -55,6 +55,15 @@ export default async function DashboardHomePage() {
       acc.provider?.includes("x")
   )
 
+  // LinkedIn connection (Clerk external accounts)
+  const isLinkedInConnected = !!user.externalAccounts?.some(
+    (acc) =>
+      acc.provider === "oauth_linkedin" ||
+      acc.provider === "linkedin" ||
+      acc.provider === "oauth_linkedin_oidc" ||
+      acc.provider?.toLowerCase().includes("linkedin")
+  )
+
   // Supabase client
   const supabase = createServerSupabaseClient()
 
@@ -166,6 +175,7 @@ export default async function DashboardHomePage() {
         <SocialConnectionsCard
           isTwitterConnected={isTwitterConnected}
           isBlueskyConnected={isBlueskyConnected}
+          isLinkedInConnected={isLinkedInConnected}
           username={user.username ?? ""}
         />
 

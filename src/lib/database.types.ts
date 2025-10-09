@@ -45,7 +45,7 @@ export type Database = {
           error_message: string | null
           generation_id: string | null
           id: string
-          platform: string
+          platform: "twitter" | "bluesky" | "linkedin"
           published_post_id: string | null
           scheduled_at: string
           status: string
@@ -56,7 +56,7 @@ export type Database = {
           error_message?: string | null
           generation_id?: string | null
           id?: string
-          platform: string
+          platform: "twitter" | "bluesky" | "linkedin"
           published_post_id?: string | null
           scheduled_at: string
           status?: string
@@ -67,7 +67,7 @@ export type Database = {
           error_message?: string | null
           generation_id?: string | null
           id?: string
-          platform?: string
+          platform?: "twitter" | "bluesky" | "linkedin"
           published_post_id?: string | null
           scheduled_at?: string
           status?: string
