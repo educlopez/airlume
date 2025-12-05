@@ -18,6 +18,7 @@ import {
   List,
   Pencil,
   Save,
+  Settings,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -114,6 +115,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
     null
   )
   const [mediaDialogOpen, setMediaDialogOpen] = useState(false)
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false)
 
   const availableModels = hasUserKey ? ALL_MODELS : NANO_MODEL
 
@@ -142,27 +144,24 @@ export default function GeneratorForm({ userId }: { userId: string }) {
       try {
         const res = await fetch("/api/user-openai-key")
         const data = await res.json()
-        setHasUserKey(Boolean(data.hasKey))
-        if (data.hasKey) {
+        const hasKey = Boolean(data.hasKey)
+        setHasUserKey(hasKey)
+        if (hasKey) {
           setApiKey("") // never keep key in state
           setModel(ALL_MODELS[0].value)
+          setApiKeyDialogOpen(false)
         } else {
           setModel(NANO_MODEL[0].value)
+          // Abrir el modal automáticamente si no tiene clave
+          setApiKeyDialogOpen(true)
         }
       } catch {
         setHasUserKey(false)
         setModel(NANO_MODEL[0].value)
-      }
-    }
-    async function checkEnvKey() {
-      try {
-        await fetch("/api/generate", { method: "OPTIONS" })
-      } catch {
-        // setHasEnvKey(false) // removed unused setter
+        setApiKeyDialogOpen(true)
       }
     }
     checkUserKey()
-    checkEnvKey()
   }, [])
 
   useEffect(() => {
@@ -173,6 +172,13 @@ export default function GeneratorForm({ userId }: { userId: string }) {
     if (!hasUserKey) {
       setKeyInput("")
       setEditMode(false)
+      // Si no tiene clave y el modal no está abierto, abrirlo
+      if (hasUserKey === false) {
+        setApiKeyDialogOpen(true)
+      }
+    } else {
+      // Si tiene clave, cerrar el modal
+      setApiKeyDialogOpen(false)
     }
   }, [hasUserKey])
 
@@ -301,6 +307,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
       setHasUserKey(true)
       setEditMode(false)
       setKeyInput("")
+      setApiKeyDialogOpen(false) // Cerrar el modal cuando se guarda la clave
       toast.success("Your OpenAI API key has been saved.")
     } catch {
       setKeyError("Failed to save key")
@@ -341,13 +348,34 @@ export default function GeneratorForm({ userId }: { userId: string }) {
 
   // Extracted OpenAI API Key Card as a function for modal use
   function OpenAIApiKeyCard() {
+    const isRequired = hasUserKey === false
+
     return (
       <Card className="flex w-full flex-col items-start gap-6 border-none p-4 shadow-none">
-        <div className="font-semibold">OpenAI API Key</div>
-        <div className="text-foreground/70 text-xs">
-          To unlock more models for content generation, add your own OpenAI API
-          key.
-        </div>
+        {isRequired ? (
+          <DialogHeader>
+            <DialogTitle>OpenAI API Key Required</DialogTitle>
+            <DialogDescription>
+              You need to add your OpenAI API key to generate posts. This is
+              required to use the content generator.
+            </DialogDescription>
+          </DialogHeader>
+        ) : (
+          <div className="font-semibold">OpenAI API Key</div>
+        )}
+        {isRequired && (
+          <div className="text-foreground/70 text-sm">
+            To generate content, you must add your own OpenAI API key. Without
+            it, you cannot use the generator. Please add your key below to
+            continue.
+          </div>
+        )}
+        {!isRequired && (
+          <div className="text-foreground/70 text-xs">
+            To unlock more models for content generation, add your own OpenAI
+            API key.
+          </div>
+        )}
         {hasUserKey && !editMode ? (
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
             <div className="text-airlume text-sm">
@@ -434,23 +462,19 @@ export default function GeneratorForm({ userId }: { userId: string }) {
     <div className="relative mx-auto flex h-[90vh] w-full flex-col gap-8 md:flex-row">
       {/* Columna izquierda: contenido central */}
       <div className="relative flex flex-1 flex-col items-center">
-        {/* OpenAI API Key Modal Trigger and Modal */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className="mb-4 w-full max-w-lg"
-            >
-              Manage OpenAI API Key
-            </Button>
-          </DialogTrigger>
+        {/* OpenAI API Key Modal - Se abre automáticamente si no hay clave */}
+        <Dialog open={apiKeyDialogOpen} onOpenChange={setApiKeyDialogOpen}>
           <DialogContent className="w-full max-w-lg">
             <OpenAIApiKeyCard />
           </DialogContent>
         </Dialog>
         {/* Área central con Card y tweet generado o placeholder */}
-        <Card className="shadow-custom flex w-full max-w-lg flex-col items-center gap-6 border-none p-8">
+        <Card
+          className={cn(
+            "shadow-custom flex w-full max-w-lg flex-col items-center gap-6 border-none p-8",
+            !hasUserKey && "pointer-events-none opacity-50"
+          )}
+        >
           {editedResponse ? (
             <div className="flex w-full items-start gap-4">
               <Avatar className="h-12 w-12">
@@ -647,17 +671,31 @@ export default function GeneratorForm({ userId }: { userId: string }) {
             className="shadow-custom bg-background flex flex-col items-end gap-2 rounded-xl border border-none p-4"
           >
             <Textarea
-              className="min-h-[48px] w-full flex-1 resize-none rounded border p-2 text-lg focus:border-blue-400 focus:ring focus:outline-none"
+              className={cn(
+                "min-h-[48px] w-full flex-1 resize-none rounded border p-2 text-lg focus:border-blue-400 focus:ring focus:outline-none",
+                !hasUserKey && "opacity-50"
+              )}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Write about your post..."
               required
+              disabled={!hasUserKey}
             />
             <div className="flex w-full flex-col gap-2 md:flex-row md:items-center">
+              {/* Botón para abrir el modal de API Key - siempre visible y funcional */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setApiKeyDialogOpen(true)}
+                className="text-xs"
+              >
+                <Info className="mr-1 size-4" />
+                {hasUserKey ? "Manage API Key" : "Add API Key"}
+              </Button>
               <Select
                 value={model}
                 onValueChange={setModel}
-                disabled={availableModels.length === 1}
+                disabled={availableModels.length === 1 || !hasUserKey}
               >
                 <SelectTrigger>
                   <SelectValue
@@ -676,9 +714,13 @@ export default function GeneratorForm({ userId }: { userId: string }) {
               </Select>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button type="button" variant="outline" className="text-xs">
-                    <Info className="mr-1 size-4" />
-                    Advanced
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="text-xs"
+                  >
+                    <Settings className="size-4" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -749,7 +791,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
                 <Button
                   type="submit"
                   variant="custom"
-                  disabled={!isFormValid || loading}
+                  disabled={!isFormValid || loading || !hasUserKey}
                   className="flex w-full items-center justify-center md:order-last md:flex md:w-auto"
                 >
                   {loading ? (
@@ -776,7 +818,12 @@ export default function GeneratorForm({ userId }: { userId: string }) {
         </div>
       </div>
       {/* Columna derecha: panel de métricas (desktop) */}
-      <div className="relative top-0 right-0 h-full w-full md:w-96">
+      <div
+        className={cn(
+          "relative top-0 right-0 h-full w-full md:w-96",
+          !hasUserKey && "pointer-events-none opacity-50"
+        )}
+      >
         <Card className="shadow-custom flex h-full w-full flex-col overflow-y-auto border-none p-4">
           {editedResponse ? (
             <MetricsPanel

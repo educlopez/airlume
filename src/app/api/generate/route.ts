@@ -62,13 +62,9 @@ export async function POST(req: NextRequest) {
         try {
           apiKey = decrypt(data.openai_key_encrypted)
         } catch {
-          // Si falla la desencriptación, sigue con la clave manual/env
+          // Si falla la desencriptación, el usuario debe proporcionar su propia clave
         }
       }
-    }
-    // Usa la del ENV solo si no hay ninguna otra
-    if (!apiKey && process.env.OPENAI_KEY) {
-      apiKey = process.env.OPENAI_KEY
     }
 
     if (!prompt || !apiKey) {
@@ -109,10 +105,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function OPTIONS() {
-  // Used by the generator page to detect if the local OpenAI key is set
-  const envApiKey = process.env.OPENAI_KEY
+  // No longer checking for local API key - users must provide their own
   return new Response(
-    JSON.stringify({ hasLocalApiKey: Boolean(envApiKey) }),
+    JSON.stringify({ hasLocalApiKey: false }),
     { status: 200, headers: { "Content-Type": "application/json" } }
   )
 }
