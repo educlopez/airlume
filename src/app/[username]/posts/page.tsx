@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import { currentUser } from "@clerk/nextjs/server"
 
@@ -12,6 +13,13 @@ import { PostCard, type Generation, type Schedule } from "./PostCard"
 export const metadata: Metadata = {
   title: "Posts",
 }
+
+// Generate static params for build-time validation (required by Cache Components)
+// This route is dynamic, but we provide a dummy entry for build validation
+export function generateStaticParams() {
+  return [{ username: "dummy" }]
+}
+
 // Define the type for the raw Supabase response
 interface ScheduleRaw {
   id: string
@@ -35,7 +43,8 @@ interface ScheduleRaw {
       }[]
 }
 
-export default async function PostsPage() {
+// Extracted async component for data fetching (wrapped in Suspense)
+async function PostsContent() {
   const user = await currentUser()
   if (!user) return <div>Please sign in to view your posts.</div>
 
@@ -493,5 +502,23 @@ export default async function PostsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+// Loading fallback component
+function PostsLoading() {
+  return (
+    <div className="space-y-6 p-6">
+      <div className="h-8 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="h-64 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+    </div>
+  )
+}
+
+export default function PostsPage() {
+  return (
+    <Suspense fallback={<PostsLoading />}>
+      <PostsContent />
+    </Suspense>
   )
 }

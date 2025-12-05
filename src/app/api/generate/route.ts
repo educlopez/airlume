@@ -23,7 +23,8 @@ function decrypt(enc: string): string {
   return decrypted.toString("utf8")
 }
 
-export const runtime = "nodejs"
+// MIGRATED: Removed export const runtime = 'nodejs' (incompatible with Cache Components)
+// nodejs is the default runtime, no need to specify
 
 function isErrorWithMessage(err: unknown): err is { message: string } {
   return (

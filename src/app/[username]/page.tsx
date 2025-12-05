@@ -1,4 +1,4 @@
-import React from "react"
+import React, { Suspense } from "react"
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
@@ -18,6 +18,13 @@ import { Card } from "@/components/ui/card"
 export const metadata: Metadata = {
   title: "Dashboard",
 }
+
+// Generate static params for build-time validation (required by Cache Components)
+// This route is dynamic, but we provide a dummy entry for build validation
+export function generateStaticParams() {
+  return [{ username: "dummy" }]
+}
+
 // Types for scheduled post rows
 // Local type for gallery files
 type GalleryFile = {
@@ -37,7 +44,8 @@ interface ScheduledRow {
   generation: Generation | Generation[]
 }
 
-export default async function DashboardHomePage() {
+// Extracted async component for data fetching (wrapped in Suspense)
+async function DashboardContent() {
   // Get Clerk user
   const user = await currentUser()
   if (!user) {
@@ -344,5 +352,30 @@ export default async function DashboardHomePage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+// Loading fallback component
+function DashboardLoading() {
+  return (
+    <div className="space-y-6 p-6">
+      <div className="h-32 w-full animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="h-48 animate-pulse rounded bg-gray-100 dark:bg-gray-800"
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function DashboardHomePage() {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <DashboardContent />
+    </Suspense>
   )
 }
