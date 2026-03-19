@@ -230,19 +230,7 @@ export default function GeneratorForm({ userId }: { userId: string }) {
         done = doneReading
         if (value) {
           const chunk = decoder.decode(value)
-          const lines = chunk.split("\n")
-          let textChunk = ""
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
-              try {
-                const text = JSON.parse(line.slice(2))
-                textChunk += text
-              } catch {
-                textChunk += line.slice(2)
-              }
-            }
-          }
-          setResponse((prev) => prev + textChunk)
+          setResponse((prev) => prev + chunk)
         }
       }
     } catch (err: unknown) {

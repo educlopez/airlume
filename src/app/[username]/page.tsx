@@ -29,7 +29,7 @@ export function generateStaticParams() {
 // Local type for gallery files
 type GalleryFile = {
   name: string
-  updated_at?: string
+  updated_at?: string | null
 }
 
 interface Generation {

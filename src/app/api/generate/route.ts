@@ -82,13 +82,13 @@ export async function POST(req: NextRequest) {
       model: openaiProvider(model),
       prompt,
       temperature,
-      maxTokens,
+      maxOutputTokens: maxTokens,
       system: systemPrompt || undefined,
       presencePenalty,
       frequencyPenalty,
       topP,
     })
-    return result.toDataStreamResponse()
+    return result.toTextStreamResponse()
   } catch (err: unknown) {
     let message = "Internal error"
     if (isErrorWithMessage(err)) {

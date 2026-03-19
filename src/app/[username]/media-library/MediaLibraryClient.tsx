@@ -13,9 +13,9 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { deleteImage, isImageUsed, uploadImage } from "./actions"
 
 interface FileItem {
-  id?: string
+  id?: string | null
   name: string
-  updated_at?: string
+  updated_at?: string | null
 }
 
 export default function MediaLibraryClient({
