@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabaseClient";
+import { createServerSupabaseClient } from "@/lib/supabase-client";
 
 export async function GET(req: Request) {
   // Security check for Vercel Cron
@@ -18,7 +18,12 @@ export async function GET(req: Request) {
     .eq("status", "queue")
     .lte("scheduled_at", new Date().toISOString());
 
-  if (error) return NextResponse.json({ error: "Error fetching posts" }, { status: 500 });
+  if (error) {
+    return NextResponse.json(
+      { error: "Error fetching posts" },
+      { status: 500 }
+    );
+  }
 
   for (const post of posts ?? []) {
     // 2. TODO: Publish logic (call your publish API or logic here)
@@ -31,5 +36,8 @@ export async function GET(req: Request) {
       .eq("id", post.id);
   }
 
-  return NextResponse.json({ message: "Queue processed", count: posts?.length ?? 0 });
+  return NextResponse.json({
+    message: "Queue processed",
+    count: posts?.length ?? 0,
+  });
 }

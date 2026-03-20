@@ -4,9 +4,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   images: {
     unoptimized: true,
-    remotePatterns: [
-      { hostname: "github.com" },
-    ],
+    remotePatterns: [{ hostname: "github.com" }],
   },
 };
 

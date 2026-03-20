@@ -1,14 +1,15 @@
 export default function Logo({ className }: { className?: string }) {
   return (
     <svg
-      width="777"
-      height="193"
-      viewBox="0 0 777 193"
-      fill="none"
-      stroke="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
       className={className}
+      fill="none"
+      height="193"
+      stroke="currentColor"
+      viewBox="0 0 777 193"
+      width="777"
+      xmlns="http://www.w3.org/2000/svg"
     >
+      <title>Airlume</title>
       <path
         d="M99.598 14.291C99.616 14.3175 99.6379 14.3418 99.6517 14.3706C99.7763 14.6335 99.685 14.933 99.6239 15.1994C98.8339 18.6411 97.5787 22.4006 96.6441 25.876C94.3041 34.7035 91.8594 43.5029 89.31 52.2719C86.2008 54.2621 82.8774 56.0135 79.6709 57.8503C70.2443 63.2499 60.6082 68.3943 51.3516 74.0739C49.8935 71.3555 48.1985 68.712 46.633 66.0496C45.0444 63.3246 43.4713 60.5906 41.9134 57.8475C42.9779 53.8045 44.0101 49.7531 45.0099 45.6935C47.2724 44.5899 49.453 43.0689 51.6003 41.7512C55.2268 39.5193 58.8744 37.3215 62.5423 35.1583C74.7384 27.9296 87.0934 20.9721 99.598 14.291Z"
         fill="currentColor"
@@ -62,5 +63,5 @@ export default function Logo({ className }: { className?: string }) {
         fill="currentColor"
       />
     </svg>
-  )
+  );
 }

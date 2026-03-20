@@ -1,75 +1,75 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useState } from "react"
-import { Check, ExternalLink } from "lucide-react"
-import { toast } from "sonner"
+import { Check, ExternalLink } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export function TwitterOAuthConnectionCard() {
-  const [connected, setConnected] = useState(false)
-  const [screenName, setScreenName] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [connecting, setConnecting] = useState(false)
-  const [disconnecting, setDisconnecting] = useState(false)
+  const [connected, setConnected] = useState(false);
+  const [screenName, setScreenName] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   const checkConnection = useCallback(async () => {
     try {
-      const res = await fetch("/api/twitter/oauth/status")
-      const data = await res.json()
-      setConnected(data.connected || false)
-      setScreenName(data.screen_name || null)
+      const res = await fetch("/api/twitter/oauth/status");
+      const data = await res.json();
+      setConnected(data.connected);
+      setScreenName(data.screen_name || null);
     } catch (error) {
-      console.error("Failed to check Twitter connection:", error)
+      console.error("Failed to check Twitter connection:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    checkConnection()
-  }, [checkConnection])
+    checkConnection();
+  }, [checkConnection]);
 
   async function handleConnect() {
     try {
-      setConnecting(true)
-      const res = await fetch("/api/twitter/oauth/initiate")
-      const data = await res.json()
+      setConnecting(true);
+      const res = await fetch("/api/twitter/oauth/initiate");
+      const data = await res.json();
 
       if (data.url) {
         // Open OAuth flow in new window
-        window.location.href = data.url
+        window.location.href = data.url;
       } else {
-        toast.error("Failed to initiate Twitter connection")
+        toast.error("Failed to initiate Twitter connection");
       }
     } catch (error) {
-      console.error("Failed to connect Twitter:", error)
-      toast.error("Failed to connect Twitter")
+      console.error("Failed to connect Twitter:", error);
+      toast.error("Failed to connect Twitter");
     } finally {
-      setConnecting(false)
+      setConnecting(false);
     }
   }
 
   async function handleDisconnect() {
     try {
-      setDisconnecting(true)
+      setDisconnecting(true);
       const res = await fetch("/api/twitter/oauth/disconnect", {
         method: "DELETE",
-      })
+      });
 
       if (res.ok) {
-        setConnected(false)
-        setScreenName(null)
-        toast.success("Twitter disconnected successfully")
+        setConnected(false);
+        setScreenName(null);
+        toast.success("Twitter disconnected successfully");
       } else {
-        toast.error("Failed to disconnect Twitter")
+        toast.error("Failed to disconnect Twitter");
       }
     } catch (error) {
-      console.error("Failed to disconnect Twitter:", error)
-      toast.error("Failed to disconnect Twitter")
+      console.error("Failed to disconnect Twitter:", error);
+      toast.error("Failed to disconnect Twitter");
     } finally {
-      setDisconnecting(false)
+      setDisconnecting(false);
     }
   }
 
@@ -79,7 +79,7 @@ export function TwitterOAuthConnectionCard() {
         <div className="font-semibold">Twitter/X Connection (OAuth 1.0a)</div>
         <div className="text-foreground/70 text-sm">Loading...</div>
       </Card>
-    )
+    );
   }
 
   return (
@@ -92,7 +92,7 @@ export function TwitterOAuthConnectionCard() {
 
       {connected ? (
         <div className="flex w-full flex-col gap-2">
-          <div className="text-airlume flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-airlume text-sm">
             <Check className="h-4 w-4" />
             Connected as <span className="font-semibold">@{screenName}</span>
           </div>
@@ -101,10 +101,10 @@ export function TwitterOAuthConnectionCard() {
           </div>
           <div className="mt-2 flex gap-2">
             <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDisconnect}
               disabled={disconnecting}
+              onClick={handleDisconnect}
+              size="sm"
+              variant="destructive"
             >
               {disconnecting ? "Disconnecting..." : "Disconnect"}
             </Button>
@@ -116,16 +116,16 @@ export function TwitterOAuthConnectionCard() {
             Not connected. Click below to authorize with Twitter.
           </div>
           <Button
-            variant="custom"
-            size="sm"
-            onClick={handleConnect}
-            disabled={connecting}
             className="flex items-center gap-2"
+            disabled={connecting}
+            onClick={handleConnect}
+            size="sm"
+            variant="custom"
           >
             <ExternalLink className="h-4 w-4" />
             {connecting ? "Connecting..." : "Connect Twitter for Images"}
           </Button>
-          <div className="text-foreground/70 mt-2 text-xs">
+          <div className="mt-2 text-foreground/70 text-xs">
             <strong>Note:</strong> This will redirect you to Twitter to
             authorize the app. You&apos;ll be redirected back after
             authorization.
@@ -133,5 +133,5 @@ export function TwitterOAuthConnectionCard() {
         </div>
       )}
     </Card>
-  )
+  );
 }

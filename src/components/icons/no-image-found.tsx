@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-type NotImageFoundProps = {
-  className?: string
-  primaryColor?: string // For airlume
-  backgroundColor?: string // For background
+interface NotImageFoundProps {
+  backgroundColor?: string; // For background
+  className?: string;
+  primaryColor?: string; // For airlume
 }
 
 export function NotImageFound({
@@ -13,21 +13,22 @@ export function NotImageFound({
 }: NotImageFoundProps) {
   return (
     <svg
-      width="73"
+      className={cn(className)}
+      fill="none"
       height="79"
       viewBox="0 0 73 79"
-      fill="none"
+      width="73"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn(className)}
     >
+      <title>No images found</title>
       <rect
-        x="1"
-        y="12"
-        width="58"
+        fill={backgroundColor}
         height="58"
         rx="8"
-        fill={backgroundColor}
         stroke={primaryColor}
+        width="58"
+        x="1"
+        y="12"
       />
       <path
         d="M7 23C7 20.2386 9.23858 18 12 18H48C50.7614 18 53 20.2386 53 23V51C53 53.7614 50.7614 56 48 56H12C9.23858 56 7 53.7614 7 51V23Z"
@@ -56,8 +57,8 @@ export function NotImageFound({
       <circle
         cx="57"
         cy="65"
-        r="13"
         fill={backgroundColor}
+        r="13"
         stroke={primaryColor}
       />
       <path
@@ -71,5 +72,5 @@ export function NotImageFound({
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }

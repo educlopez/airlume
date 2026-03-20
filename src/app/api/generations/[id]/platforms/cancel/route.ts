@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabaseClient";
+import { type NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase-client";
 
 export async function POST(req: NextRequest) {
   // Extract id from the URL
-  const url = new URL(req.url!);
+  const url = new URL(req.url);
   const id = url.pathname.split("/").at(-3); // /api/generations/[id]/platforms/cancel
   const { platform } = await req.json();
-  if (!platform || !id) {
-    return NextResponse.json({ error: "Missing platform or id" }, { status: 400 });
+  if (!(platform && id)) {
+    return NextResponse.json(
+      { error: "Missing platform or id" },
+      { status: 400 }
+    );
   }
   const supabase = createServerSupabaseClient();
   const { error } = await supabase

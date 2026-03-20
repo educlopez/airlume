@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabaseClient";
+import { type NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase-client";
 
 export async function GET(req: NextRequest) {
   // Extract id from the URL
-  const url = new URL(req.url!);
+  const url = new URL(req.url);
   const id = url.pathname.split("/").at(-2); // /api/generations/[id]/platforms
   const supabase = createServerSupabaseClient();
   const { data, error } = await supabase

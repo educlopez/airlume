@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { useUser } from "@clerk/nextjs"
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import type * as React from "react";
 
-import Copyright from "@/components/copyright"
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import Copyright from "@/components/copyright";
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -15,19 +15,19 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-import { CalendarDaysIcon } from "./icons/calendar-days"
-import { GalleryHorizontalEndIcon } from "./icons/gallery-horizontal-end"
-import { HomeIcon } from "./icons/home"
-import { SquarePenIcon } from "./icons/square-pen"
-import Logo from "./logo"
-import { NavGenerations } from "./nav-generations"
-import { Separator } from "./ui/separator"
+import { CalendarDaysIcon } from "./icons/calendar-days";
+import { GalleryHorizontalEndIcon } from "./icons/gallery-horizontal-end";
+import { HomeIcon } from "./icons/home";
+import { SquarePenIcon } from "./icons/square-pen";
+import Logo from "./logo";
+import { NavGenerations } from "./nav-generations";
+import { Separator } from "./ui/separator";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser()
-  const username = user?.username || ""
+  const { user } = useUser();
+  const username = user?.username || "";
 
   const navMain = [
     {
@@ -40,7 +40,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: `/${username}/generator`,
       icon: SquarePenIcon,
     },
-  ]
+  ];
   const navDocuments = [
     {
       title: "Post Scheduler",
@@ -52,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: `/${username}/media-library`,
       icon: GalleryHorizontalEndIcon,
     },
-  ]
+  ];
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -64,8 +64,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link
-                href={`/${username}`}
                 className="flex w-full items-start justify-start"
+                href={`/${username}`}
               >
                 <Logo className="!size-full max-h-24" />
               </Link>
@@ -83,5 +83,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <Copyright />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

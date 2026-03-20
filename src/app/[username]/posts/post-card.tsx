@@ -1,10 +1,6 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { format } from "date-fns"
+import { format } from "date-fns";
 import {
   Copy,
   EllipsisVertical,
@@ -13,17 +9,26 @@ import {
   Info,
   Pencil,
   Trash2,
-} from "lucide-react"
-import { toast } from "sonner"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
-import { SocialBluesky } from "@/components/icons/social-bluesky"
-import { SocialLinkedIn } from "@/components/icons/social-linkedin"
-import { SocialX } from "@/components/icons/social-x"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
+import { SocialBluesky } from "@/components/icons/social-bluesky";
+import { SocialLinkedIn } from "@/components/icons/social-linkedin";
+import { SocialX } from "@/components/icons/social-x";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -32,224 +37,259 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 
 import {
   deleteGeneration,
   duplicateGeneration,
   scheduleGenerationMultiPlatform,
   updateGeneration,
-} from "../generator/actions"
-import MediaLibraryPicker from "./MediaLibraryPicker"
+} from "../generator/actions";
+import MediaLibraryPicker from "./media-library-picker";
 
-export type Generation = {
-  id: string
-  response: string
-  image_url: string | null
-  created_at: string
-  status: "draft" | "queue" | "sent"
-  scheduled_at?: string | null
+export interface Generation {
+  created_at: string;
+  id: string;
+  image_url: string | null;
+  response: string;
+  scheduled_at?: string | null;
+  status: "draft" | "queue" | "sent";
 }
 
-export type Schedule = {
-  id: string
-  platform: "twitter" | "bluesky" | "linkedin"
-  status: "queue" | "sent" | "failed"
-  scheduled_at: string
-  error_message?: string | null
-  published_post_id?: string | null
-  generation: Generation
+export interface Schedule {
+  error_message?: string | null;
+  generation: Generation;
+  id: string;
+  platform: "twitter" | "bluesky" | "linkedin";
+  published_post_id?: string | null;
+  scheduled_at: string;
+  status: "queue" | "sent" | "failed";
 }
 
-type User = {
-  id: string
-  username?: string | null
-  fullName?: string | null
-  firstName?: string | null
-  imageUrl?: string | null
+interface User {
+  firstName?: string | null;
+  fullName?: string | null;
+  id: string;
+  imageUrl?: string | null;
+  username?: string | null;
 }
 
-export type PlatformStatus = {
-  platform: "twitter" | "bluesky" | "linkedin"
-  status: "queue" | "sent" | "failed"
-  scheduled_at?: string
-  error_message?: string | null
-  published_post_id?: string | null
+export interface PlatformStatus {
+  error_message?: string | null;
+  platform: "twitter" | "bluesky" | "linkedin";
+  published_post_id?: string | null;
+  scheduled_at?: string;
+  status: "queue" | "sent" | "failed";
+}
+
+const PLATFORM_ENDPOINTS: Record<string, string> = {
+  twitter: "/api/twitter/publish",
+  bluesky: "/api/bluesky/publish",
+  linkedin: "/api/linkedin/publish",
+};
+
+function getStatusColor(status: string, isSent: boolean): string {
+  if (isSent) {
+    return "#12B981";
+  }
+  if (status === "failed") {
+    return "#F43F5F";
+  }
+  if (status === "queue") {
+    return "#A88BFA";
+  }
+  return "#A1A1AA";
+}
+
+function getStatusLabel(
+  isSent: boolean,
+  scheduleStatus: string | undefined,
+  generationStatus: string
+): string {
+  if (isSent) {
+    return "Sent";
+  }
+  if (scheduleStatus) {
+    return scheduleStatus.charAt(0).toUpperCase() + scheduleStatus.slice(1);
+  }
+  return generationStatus.charAt(0).toUpperCase() + generationStatus.slice(1);
 }
 
 // NUEVO: Hook para obtener el estado por plataforma
 function usePlatformStatuses(generationId: string): PlatformStatus[] {
-  const [platforms, setPlatforms] = useState<PlatformStatus[]>([])
+  const [platforms, setPlatforms] = useState<PlatformStatus[]>([]);
   useEffect(() => {
     fetch(`/api/generations/${generationId}/platforms`)
       .then((r) => r.json())
-      .then((data) => setPlatforms(data.platforms || []))
-  }, [generationId])
-  return platforms
+      .then((data) => setPlatforms(data.platforms || []));
+  }, [generationId]);
+  return platforms;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: large component
 export function PostCard({
   generation,
   user,
   hasTwitter,
   schedule,
 }: {
-  generation: Generation
-  user: User
-  hasTwitter: boolean
-  schedule?: Schedule
+  generation: Generation;
+  user: User;
+  hasTwitter: boolean;
+  schedule?: Schedule;
 }) {
-  const [open, setOpen] = useState(false)
-  const [response, setResponse] = useState(generation.response)
-  const [imageUrl, setImageUrl] = useState(generation.image_url ?? "")
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [saving, setSaving] = useState(false)
-  const router = useRouter()
-  const [blueskyDialogOpen, setBlueskyDialogOpen] = useState(false)
-  const [blueskyHandle, setBlueskyHandle] = useState("")
-  const [blueskyPassword, setBlueskyPassword] = useState("")
-  const [imageAlt, setImageAlt] = useState("")
-  const [publishingBluesky, setPublishingBluesky] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [loadingBluesky] = useState(false)
-  const [hasBluesky, setHasBluesky] = useState(false)
-  const [hasLinkedIn, setHasLinkedIn] = useState(false)
-  const [hasTwitterOAuth1, setHasTwitterOAuth1] = useState(false)
-  const [publishModalOpen, setPublishModalOpen] = useState(false)
-  const [publishTwitter, setPublishTwitter] = useState(false)
-  const [publishBluesky, setPublishBluesky] = useState(false)
-  const [publishLinkedIn, setPublishLinkedIn] = useState(false)
-  const [publishing, setPublishing] = useState(false)
-  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
-  const [scheduleTwitter, setScheduleTwitter] = useState(false)
-  const [scheduleBluesky, setScheduleBluesky] = useState(false)
-  const [scheduleLinkedIn, setScheduleLinkedIn] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [response, setResponse] = useState(generation.response);
+  const [imageUrl, setImageUrl] = useState(generation.image_url ?? "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [saving, setSaving] = useState(false);
+  const router = useRouter();
+  const [blueskyDialogOpen, setBlueskyDialogOpen] = useState(false);
+  const [blueskyHandle, setBlueskyHandle] = useState("");
+  const [blueskyPassword, setBlueskyPassword] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
+  const [publishingBluesky, setPublishingBluesky] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loadingBluesky] = useState(false);
+  const [hasBluesky, setHasBluesky] = useState(false);
+  const [hasLinkedIn, setHasLinkedIn] = useState(false);
+  const [hasTwitterOAuth1, setHasTwitterOAuth1] = useState(false);
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [publishTwitter, setPublishTwitter] = useState(false);
+  const [publishBluesky, setPublishBluesky] = useState(false);
+  const [publishLinkedIn, setPublishLinkedIn] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [scheduleTwitter, setScheduleTwitter] = useState(false);
+  const [scheduleBluesky, setScheduleBluesky] = useState(false);
+  const [scheduleLinkedIn, setScheduleLinkedIn] = useState(false);
   const [scheduledDateTwitter, setScheduledDateTwitter] = useState<
     Date | undefined
-  >()
-  const [scheduledTimeTwitter, setScheduledTimeTwitter] = useState("")
+  >();
+  const [scheduledTimeTwitter, setScheduledTimeTwitter] = useState("");
   const [scheduledDateBluesky, setScheduledDateBluesky] = useState<
     Date | undefined
-  >()
-  const [scheduledTimeBluesky, setScheduledTimeBluesky] = useState("")
+  >();
+  const [scheduledTimeBluesky, setScheduledTimeBluesky] = useState("");
   const [scheduledDateLinkedIn, setScheduledDateLinkedIn] = useState<
     Date | undefined
-  >()
-  const [scheduledTimeLinkedIn, setScheduledTimeLinkedIn] = useState("")
-  const [scheduling, setScheduling] = useState(false)
+  >();
+  const [scheduledTimeLinkedIn, setScheduledTimeLinkedIn] = useState("");
+  const [scheduling, setScheduling] = useState(false);
   const [editPlatform, setEditPlatform] = useState<null | {
-    platform: string
-    scheduled_at: string
-  }>(null)
-  const [editDate, setEditDate] = useState<Date | undefined>()
-  const [editTime, setEditTime] = useState("")
-  const [editLoading, setEditLoading] = useState(false)
-  const [retryPlatform, setRetryPlatform] = useState<null | string>(null)
-  const [retryLoading, setRetryLoading] = useState(false)
-  const [cancelLoading, setCancelLoading] = useState<string | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imageFileError, setImageFileError] = useState<string | null>(null)
+    platform: string;
+    scheduled_at: string;
+  }>(null);
+  const [editDate, setEditDate] = useState<Date | undefined>();
+  const [editTime, setEditTime] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [retryPlatform, setRetryPlatform] = useState<null | string>(null);
+  const [retryLoading, setRetryLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFileError, setImageFileError] = useState<string | null>(null);
   const [imageUrlFromLibrary, setImageUrlFromLibrary] = useState<string | null>(
     null
-  )
-  const [mediaDialogOpen, setMediaDialogOpen] = useState(false)
+  );
+  const [mediaDialogOpen, setMediaDialogOpen] = useState(false);
 
-  const platforms = usePlatformStatuses(generation.id)
+  const platforms = usePlatformStatuses(generation.id);
 
   // Si hay schedule, sobreescribe los datos relevantes
-  const platform = schedule?.platform
-  const scheduleStatus = schedule?.status
-  const scheduledAt = schedule?.scheduled_at
-  const errorMessage = schedule?.error_message
+  const platform = schedule?.platform;
+  const scheduleStatus = schedule?.status;
+  const scheduledAt = schedule?.scheduled_at;
+  const errorMessage = schedule?.error_message;
 
   // Hide action buttons if sent (direct or any platform sent)
   const isSent =
-    generation.status === "sent" || platforms.some((p) => p.status === "sent")
+    generation.status === "sent" || platforms.some((p) => p.status === "sent");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     // Always clear all other image states when picking a new file
-    setImageUrlFromLibrary(null)
-    setImageFileError(null)
+    setImageUrlFromLibrary(null);
+    setImageFileError(null);
     if (file) {
       if (file.size > 1024 * 1024) {
-        setImageFileError("Image must be less than 1MB.")
-        setImageFile(null)
-        setImageUrl("")
+        setImageFileError("Image must be less than 1MB.");
+        setImageFile(null);
+        setImageUrl("");
       } else {
-        setImageUrl(URL.createObjectURL(file))
-        setImageFile(file)
-        setImageFileError(null)
+        setImageUrl(URL.createObjectURL(file));
+        setImageFile(file);
+        setImageFileError(null);
       }
     } else {
-      setImageFile(null)
-      setImageUrl("")
+      setImageFile(null);
+      setImageUrl("");
     }
-  }
+  };
 
   const handleSave = async () => {
-    setSaving(true)
-    let finalImageUrl = imageUrlFromLibrary ? imageUrlFromLibrary : imageUrl
+    setSaving(true);
+    let finalImageUrl = imageUrlFromLibrary ? imageUrlFromLibrary : imageUrl;
     if (imageFile) {
       try {
-        const { uploadImageToSupabase } = await import("../generator/actions")
+        const { uploadImageToSupabase } = await import("../generator/actions");
         const result = await uploadImageToSupabase({
           userId: user.id,
           imageFile,
-        })
+        });
         if (typeof result === "object" && result.error) {
-          toast.error(result.error)
-          setSaving(false)
-          return
+          toast.error(result.error);
+          setSaving(false);
+          return;
         }
-        finalImageUrl = result as string
+        finalImageUrl = result as string;
       } catch (err) {
-        toast.error("Error uploading image")
-        console.error(err)
-        setSaving(false)
-        return
+        toast.error("Error uploading image");
+        console.error(err);
+        setSaving(false);
+        return;
       }
     }
     await updateGeneration({
       id: generation.id,
       response,
       image_url: finalImageUrl ? finalImageUrl : "",
-    })
-    setSaving(false)
-    setOpen(false)
-    router.refresh()
-  }
+    });
+    setSaving(false);
+    setOpen(false);
+    router.refresh();
+  };
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-platform publish handler
   const handleMultiPublish = async () => {
-    setPublishing(true)
-    let anySuccess = false
+    setPublishing(true);
+    let anySuccess = false;
     // Twitter
     if (publishTwitter) {
-      let imageBase64 = null
+      let imageBase64: string | null = null;
       // If we have an image and OAuth 1.0a connection, include it
       if (imageUrl && hasTwitterOAuth1) {
         try {
-          const res = await fetch(imageUrl)
-          const blob = await res.blob()
+          const res = await fetch(imageUrl);
+          const blob = await res.blob();
           imageBase64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
+            const reader = new FileReader();
             reader.onload = () =>
-              resolve((reader.result as string).split(",")[1])
-            reader.onerror = reject
-            reader.readAsDataURL(blob)
-          })
+              resolve((reader.result as string).split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
         } catch {
-          toast.error("Could not read image for Twitter upload.")
-          setPublishing(false)
-          return
+          toast.error("Could not read image for Twitter upload.");
+          setPublishing(false);
+          return;
         }
       }
 
@@ -261,37 +301,37 @@ export function PostCard({
           id: generation.id,
           imageBase64: imageBase64 || undefined,
         }),
-      })
+      });
       if (res.ok) {
-        toast.success("Published to Twitter!")
-        anySuccess = true
+        toast.success("Published to Twitter!");
+        anySuccess = true;
       } else {
-        const data = await res.json()
+        const data = await res.json();
         if (data.needsOAuth1) {
-          toast.error("Please connect Twitter via Settings to post images")
+          toast.error("Please connect Twitter via Settings to post images");
         } else {
-          toast.error(data.error || "Failed to publish to Twitter.")
+          toast.error(data.error || "Failed to publish to Twitter.");
         }
       }
     }
     // Bluesky
     if (publishBluesky) {
-      let imageBase64 = null
+      let imageBase64: string | null = null;
       if (imageUrl) {
         try {
-          const res = await fetch(imageUrl)
-          const blob = await res.blob()
+          const res = await fetch(imageUrl);
+          const blob = await res.blob();
           imageBase64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
+            const reader = new FileReader();
             reader.onload = () =>
-              resolve((reader.result as string).split(",")[1])
-            reader.onerror = reject
-            reader.readAsDataURL(blob)
-          })
+              resolve((reader.result as string).split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
         } catch {
-          toast.error("Could not read image for Bluesky upload.")
-          setPublishing(false)
-          return
+          toast.error("Could not read image for Bluesky upload.");
+          setPublishing(false);
+          return;
         }
       }
       const res = await fetch("/api/bluesky/publish", {
@@ -303,13 +343,13 @@ export function PostCard({
           imageAlt,
           id: generation.id,
         }),
-      })
+      });
       if (res.ok) {
-        toast.success("Published to Bluesky!")
-        anySuccess = true
+        toast.success("Published to Bluesky!");
+        anySuccess = true;
       } else {
-        const data = await res.json()
-        toast.error(data.error || "Failed to publish to Bluesky.")
+        const data = await res.json();
+        toast.error(data.error || "Failed to publish to Bluesky.");
       }
     }
     // LinkedIn
@@ -323,22 +363,24 @@ export function PostCard({
           imageUrl: imageUrl || null,
           imageAlt: imageAlt || "",
         }),
-      })
+      });
       if (res.ok) {
-        toast.success("Published to LinkedIn!")
-        anySuccess = true
+        toast.success("Published to LinkedIn!");
+        anySuccess = true;
       } else {
-        const data = await res.json()
-        toast.error(data.error || "Failed to publish to LinkedIn.")
+        const data = await res.json();
+        toast.error(data.error || "Failed to publish to LinkedIn.");
       }
     }
-    setPublishing(false)
-    setPublishModalOpen(false)
-    if (anySuccess) router.refresh()
-  }
+    setPublishing(false);
+    setPublishModalOpen(false);
+    if (anySuccess) {
+      router.refresh();
+    }
+  };
 
   const handleSaveBlueskyCreds = async () => {
-    setPublishingBluesky(true)
+    setPublishingBluesky(true);
     try {
       const res = await fetch("/api/bluesky", {
         method: "POST",
@@ -347,40 +389,45 @@ export function PostCard({
           handle: blueskyHandle,
           appPassword: blueskyPassword,
         }),
-      })
-      if (!res.ok) throw new Error("Failed to save credentials")
-      setHasBluesky(true)
-      setBlueskyPassword("")
-      return true
+      });
+      if (!res.ok) {
+        throw new Error("Failed to save credentials");
+      }
+      setHasBluesky(true);
+      setBlueskyPassword("");
+      return true;
     } catch {
-      toast.error("Failed to save Bluesky credentials")
-      return false
+      toast.error("Failed to save Bluesky credentials");
+      return false;
     } finally {
-      setPublishingBluesky(false)
+      setPublishingBluesky(false);
     }
-  }
+  };
 
   const handlePublishBluesky = async () => {
     if (!hasBluesky) {
-      const ok = await handleSaveBlueskyCreds()
-      if (!ok) return
+      const ok = await handleSaveBlueskyCreds();
+      if (!ok) {
+        return;
+      }
     }
-    setPublishingBluesky(true)
-    let imageBase64 = null
+    setPublishingBluesky(true);
+    let imageBase64: string | null = null;
     if (imageUrl) {
       try {
-        const res = await fetch(imageUrl)
-        const blob = await res.blob()
+        const res = await fetch(imageUrl);
+        const blob = await res.blob();
         imageBase64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve((reader.result as string).split(",")[1])
-          reader.onerror = reject
-          reader.readAsDataURL(blob)
-        })
+          const reader = new FileReader();
+          reader.onload = () =>
+            resolve((reader.result as string).split(",")[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
       } catch {
-        toast.error("Could not read image for Bluesky upload.")
-        setPublishingBluesky(false)
-        return
+        toast.error("Could not read image for Bluesky upload.");
+        setPublishingBluesky(false);
+        return;
       }
     }
     const res = await fetch("/api/bluesky/publish", {
@@ -394,65 +441,69 @@ export function PostCard({
         appPassword: blueskyPassword,
         id: generation.id,
       }),
-    })
-    setPublishingBluesky(false)
-    setBlueskyDialogOpen(false)
+    });
+    setPublishingBluesky(false);
+    setBlueskyDialogOpen(false);
     if (res.ok) {
-      toast.success("Published to Bluesky!")
-      router.refresh()
+      toast.success("Published to Bluesky!");
+      router.refresh();
     } else {
-      const data = await res.json()
-      toast.error(data.error || "Failed to publish to Bluesky.")
+      const data = await res.json();
+      toast.error(data.error || "Failed to publish to Bluesky.");
     }
-  }
+  };
 
   const handleScheduleMulti = async () => {
-    const platforms = []
+    const platforms: Array<{ platform: string; scheduled_at: string }> = [];
     if (scheduleTwitter && scheduledDateTwitter && scheduledTimeTwitter) {
-      const [h, m] = scheduledTimeTwitter.split(":")
-      const d = new Date(scheduledDateTwitter)
-      d.setHours(Number(h))
-      d.setMinutes(Number(m))
-      d.setSeconds(0)
-      d.setMilliseconds(0)
-      platforms.push({ platform: "twitter", scheduled_at: d.toISOString() })
+      const [h, m] = scheduledTimeTwitter.split(":");
+      const d = new Date(scheduledDateTwitter);
+      d.setHours(Number(h));
+      d.setMinutes(Number(m));
+      d.setSeconds(0);
+      d.setMilliseconds(0);
+      platforms.push({ platform: "twitter", scheduled_at: d.toISOString() });
     }
     if (scheduleBluesky && scheduledDateBluesky && scheduledTimeBluesky) {
-      const [h, m] = scheduledTimeBluesky.split(":")
-      const d = new Date(scheduledDateBluesky)
-      d.setHours(Number(h))
-      d.setMinutes(Number(m))
-      d.setSeconds(0)
-      d.setMilliseconds(0)
-      platforms.push({ platform: "bluesky", scheduled_at: d.toISOString() })
+      const [h, m] = scheduledTimeBluesky.split(":");
+      const d = new Date(scheduledDateBluesky);
+      d.setHours(Number(h));
+      d.setMinutes(Number(m));
+      d.setSeconds(0);
+      d.setMilliseconds(0);
+      platforms.push({ platform: "bluesky", scheduled_at: d.toISOString() });
     }
     if (scheduleLinkedIn && scheduledDateLinkedIn && scheduledTimeLinkedIn) {
-      const [h, m] = scheduledTimeLinkedIn.split(":")
-      const d = new Date(scheduledDateLinkedIn)
-      d.setHours(Number(h))
-      d.setMinutes(Number(m))
-      d.setSeconds(0)
-      d.setMilliseconds(0)
-      platforms.push({ platform: "linkedin", scheduled_at: d.toISOString() })
+      const [h, m] = scheduledTimeLinkedIn.split(":");
+      const d = new Date(scheduledDateLinkedIn);
+      d.setHours(Number(h));
+      d.setMinutes(Number(m));
+      d.setSeconds(0);
+      d.setMilliseconds(0);
+      platforms.push({ platform: "linkedin", scheduled_at: d.toISOString() });
     }
-    if (platforms.length === 0) return
-    setScheduling(true)
-    await scheduleGenerationMultiPlatform({ id: generation.id, platforms })
-    setScheduling(false)
-    setScheduleDialogOpen(false)
-    window.location.reload()
-  }
+    if (platforms.length === 0) {
+      return;
+    }
+    setScheduling(true);
+    await scheduleGenerationMultiPlatform({ id: generation.id, platforms });
+    setScheduling(false);
+    setScheduleDialogOpen(false);
+    window.location.reload();
+  };
 
   // Edit schedule logic
   const handleEditSchedule = async () => {
-    if (!editPlatform || !editDate || !editTime) return
-    setEditLoading(true)
-    const [h, m] = editTime.split(":")
-    const d = new Date(editDate)
-    d.setHours(Number(h))
-    d.setMinutes(Number(m))
-    d.setSeconds(0)
-    d.setMilliseconds(0)
+    if (!(editPlatform && editDate && editTime)) {
+      return;
+    }
+    setEditLoading(true);
+    const [h, m] = editTime.split(":");
+    const d = new Date(editDate);
+    d.setHours(Number(h));
+    d.setMinutes(Number(m));
+    d.setSeconds(0);
+    d.setMilliseconds(0);
     const res = await fetch(
       `/api/generations/${generation.id}/platforms/schedule`,
       {
@@ -463,29 +514,24 @@ export function PostCard({
           scheduled_at: d.toISOString(),
         }),
       }
-    )
-    setEditLoading(false)
-    setEditPlatform(null)
+    );
+    setEditLoading(false);
+    setEditPlatform(null);
     if (res.ok) {
-      toast.success("Schedule updated!")
-      window.location.reload()
+      toast.success("Schedule updated!");
+      window.location.reload();
     } else {
-      toast.error("Failed to update schedule")
+      toast.error("Failed to update schedule");
     }
-  }
+  };
 
   // Retry logic
   const handleRetry = async (platform: string) => {
-    setRetryLoading(true)
-    const endpoint =
-      platform === "twitter"
-        ? "/api/twitter/publish"
-        : platform === "bluesky"
-          ? "/api/bluesky/publish"
-          : platform === "linkedin"
-            ? "/api/linkedin/publish"
-            : null
-    if (!endpoint) return
+    setRetryLoading(true);
+    const endpoint = PLATFORM_ENDPOINTS[platform] ?? null;
+    if (!endpoint) {
+      return;
+    }
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -494,21 +540,21 @@ export function PostCard({
         id: generation.id,
         userId: user.id,
       }),
-    })
-    setRetryLoading(false)
-    setRetryPlatform(null)
+    });
+    setRetryLoading(false);
+    setRetryPlatform(null);
     if (res.ok) {
-      toast.success(`Re-published to ${platform}`)
-      window.location.reload()
+      toast.success(`Re-published to ${platform}`);
+      window.location.reload();
     } else {
-      const data = await res.json()
-      toast.error(data.error || `Failed to re-publish to ${platform}`)
+      const data = await res.json();
+      toast.error(data.error || `Failed to re-publish to ${platform}`);
     }
-  }
+  };
 
   // Cancelar schedule de una plataforma (solo borra la fila de generations_platforms)
   const handleCancelQueue = async (platform: string) => {
-    setCancelLoading(platform)
+    setCancelLoading(platform);
     const res = await fetch(
       `/api/generations/${generation.id}/platforms/cancel`,
       {
@@ -516,116 +562,104 @@ export function PostCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform }),
       }
-    )
-    setCancelLoading(null)
+    );
+    setCancelLoading(null);
     if (res.ok) {
-      toast.success(`Queue cancelled for ${platform}`)
-      window.location.reload()
+      toast.success(`Queue cancelled for ${platform}`);
+      window.location.reload();
     } else {
-      toast.error(`Failed to cancel queue for ${platform}`)
+      toast.error(`Failed to cancel queue for ${platform}`);
     }
-  }
+  };
 
   useEffect(() => {
     // Check Bluesky connection on mount
     fetch("/api/bluesky", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
-        if (data && data.handle) {
-          setBlueskyHandle(data.handle)
-          setHasBluesky(true)
+        if (data?.handle) {
+          setBlueskyHandle(data.handle);
+          setHasBluesky(true);
         } else {
-          setHasBluesky(false)
+          setHasBluesky(false);
         }
       })
-      .catch(() => setHasBluesky(false))
+      .catch(() => setHasBluesky(false));
 
     // Check LinkedIn connection on mount with cache busting
     fetch(`/api/linkedin?t=${Date.now()}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
-        console.log("[PostCard] LinkedIn connection data:", data)
-        if (data && data.connected) {
-          setHasLinkedIn(true)
+        console.log("[PostCard] LinkedIn connection data:", data);
+        if (data?.connected) {
+          setHasLinkedIn(true);
         } else {
-          setHasLinkedIn(false)
-          console.log("[PostCard] LinkedIn not connected. Debug:", data.debug)
+          setHasLinkedIn(false);
+          console.log("[PostCard] LinkedIn not connected. Debug:", data.debug);
         }
       })
       .catch((error) => {
-        console.error("[PostCard] Error checking LinkedIn:", error)
-        setHasLinkedIn(false)
-      })
+        console.error("[PostCard] Error checking LinkedIn:", error);
+        setHasLinkedIn(false);
+      });
 
     // Check Twitter OAuth 1.0a connection for image support
     fetch("/api/twitter/oauth/status", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
-        console.log("[PostCard] Twitter OAuth 1.0a data:", data)
-        setHasTwitterOAuth1(data.connected || false)
+        console.log("[PostCard] Twitter OAuth 1.0a data:", data);
+        setHasTwitterOAuth1(data.connected);
       })
       .catch((error) => {
-        console.error("[PostCard] Error checking Twitter OAuth 1.0a:", error)
-        setHasTwitterOAuth1(false)
-      })
-  }, [])
+        console.error("[PostCard] Error checking Twitter OAuth 1.0a:", error);
+        setHasTwitterOAuth1(false);
+      });
+  }, []);
 
   return (
-    <Card className="shadow-custom bg-background gap-4 border-none py-4">
+    <Card className="gap-4 border-none bg-background py-4 shadow-custom">
       <CardHeader className="flex flex-row items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-2">
           {/* Icono de plataforma fuera del badge */}
           {schedule && (
-            <div className="bg-airlume/10 flex items-center justify-center gap-2 rounded-full p-2">
+            <div className="flex items-center justify-center gap-2 rounded-full bg-airlume/10 p-2">
               {platform === "twitter" && (
-                <SocialX className="text-airlume size-4" />
+                <SocialX className="size-4 text-airlume" />
               )}
               {platform === "bluesky" && (
-                <SocialBluesky className="text-airlume size-4" />
+                <SocialBluesky className="size-4 text-airlume" />
               )}
               {platform === "linkedin" && (
-                <SocialLinkedIn className="text-airlume size-4" />
+                <SocialLinkedIn className="size-4 text-airlume" />
               )}
             </div>
           )}
           {/* Badge de status tipo "Status" */}
-          <span className="shadow-custom bg-primary text-foreground inline-flex items-center rounded-lg px-2 py-0.5 text-sm font-medium">
+          <span className="inline-flex items-center rounded-lg bg-primary px-2 py-0.5 font-medium text-foreground text-sm shadow-custom">
             <span
               className="mr-2 inline-block h-3 w-3 rounded"
               style={{
-                backgroundColor: isSent
-                  ? "#12B981" // sent color
-                  : scheduleStatus === "failed"
-                    ? "#F43F5F"
-                    : scheduleStatus === "queue"
-                      ? "#A88BFA"
-                      : "#A1A1AA",
+                backgroundColor: getStatusColor(scheduleStatus ?? "", isSent),
               }}
             />
-            {isSent
-              ? "Sent"
-              : scheduleStatus
-                ? scheduleStatus.charAt(0).toUpperCase() +
-                  scheduleStatus.slice(1)
-                : generation.status.charAt(0).toUpperCase() +
-                  generation.status.slice(1)}
+            {getStatusLabel(isSent, scheduleStatus, generation.status)}
             {scheduledAt && (
-              <span className="text-foreground/70 ml-1 text-xs">
+              <span className="ml-1 text-foreground/70 text-xs">
                 ({format(new Date(scheduledAt), "MMM d, HH:mm")})
               </span>
             )}
           </span>
         </div>
         {/* DropdownMenu: solo permite duplicar si todas sent/failed/draft, borrar solo si todas draft/failed */}
-        {!schedule && !isSent && (
+        {!(schedule || isSent) && (
           <div className="flex flex-row items-center gap-2">
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog onOpenChange={setOpen} open={open}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button size="sm" variant="ghost">
                   <Pencil className="size-4" /> Edit
                 </Button>
               </DialogTrigger>
-              <DialogContent className="min-w-2xl w-full max-w-4xl p-8">
+              <DialogContent className="w-full min-w-2xl max-w-4xl p-8">
                 <DialogHeader>
                   <DialogTitle>Edit Draft</DialogTitle>
                 </DialogHeader>
@@ -634,8 +668,8 @@ export function PostCard({
                     <div className="mb-2 flex items-center gap-2">
                       <Avatar>
                         <AvatarImage
-                          src={user?.imageUrl ?? ""}
                           alt={user?.fullName || user?.username || "User"}
+                          src={user?.imageUrl ?? ""}
                         />
                         <AvatarFallback>
                           {user?.firstName?.[0] || "U"}
@@ -647,77 +681,77 @@ export function PostCard({
                     </div>
                     <textarea
                       className="min-h-[120px] w-full rounded border p-2 focus:border-blue-400 focus:outline-none focus:ring"
-                      value={response}
                       onChange={(e) => setResponse(e.target.value)}
+                      value={response}
                     />
                     <div className="mt-2 flex items-center gap-4">
                       {imageUrlFromLibrary || imageUrl ? (
                         <div className="relative">
                           <Image
+                            alt="Preview"
+                            className="max-h-20 min-h-10 min-w-10 rounded border object-contain"
+                            height={80}
                             src={
                               imageUrlFromLibrary
                                 ? imageUrlFromLibrary
                                 : imageUrl
                             }
-                            alt="Preview"
                             width={80}
-                            height={80}
-                            className="max-h-20 min-h-10 min-w-10 rounded border object-contain"
                           />
                           <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            className="absolute -right-2 -top-2"
+                            className="absolute -top-2 -right-2"
                             onClick={() => {
-                              setImageUrl("")
-                              setImageUrlFromLibrary(null)
-                              setImageFile(null)
+                              setImageUrl("");
+                              setImageUrlFromLibrary(null);
+                              setImageFile(null);
                             }}
+                            size="icon"
+                            type="button"
+                            variant="ghost"
                           >
                             ×
                           </Button>
                         </div>
                       ) : null}
                       <input
-                        ref={fileInputRef}
-                        type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={handleImageChange}
+                        ref={fileInputRef}
+                        type="file"
                       />
                       <Button
+                        onClick={() => fileInputRef.current?.click()}
                         type="button"
                         variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
                       >
                         {imageUrlFromLibrary || imageUrl
                           ? "Change Image"
                           : "Add Image"}
                       </Button>
                       <Button
+                        onClick={() => setMediaDialogOpen(true)}
                         type="button"
                         variant="outline"
-                        onClick={() => setMediaDialogOpen(true)}
                       >
                         Choose from Media Library
                       </Button>
                       <MediaLibraryPicker
-                        userId={user.id}
-                        open={mediaDialogOpen}
                         onOpenChange={setMediaDialogOpen}
                         onSelect={(url: string) => {
                           // Always clear all other image states when picking from library
-                          setImageUrlFromLibrary(url)
-                          setImageUrl("")
-                          setImageFile(null)
-                          setImageFileError(null)
-                          setMediaDialogOpen(false)
+                          setImageUrlFromLibrary(url);
+                          setImageUrl("");
+                          setImageFile(null);
+                          setImageFileError(null);
+                          setMediaDialogOpen(false);
                         }}
+                        open={mediaDialogOpen}
+                        userId={user.id}
                       />
                     </div>
                     {imageFileError && (
-                      <div className="mt-2 text-xs text-red-500">
+                      <div className="mt-2 text-red-500 text-xs">
                         {imageFileError}
                       </div>
                     )}
@@ -726,16 +760,16 @@ export function PostCard({
                 <DialogFooter className="mt-6">
                   <DialogClose asChild>
                     <Button
-                      variant="outline"
                       disabled={saving || !!imageFileError}
+                      variant="outline"
                     >
                       Cancel
                     </Button>
                   </DialogClose>
                   <Button
-                    variant="custom"
-                    onClick={handleSave}
                     disabled={saving || !!imageFileError}
+                    onClick={handleSave}
+                    variant="custom"
                   >
                     {saving ? "Saving..." : "Save Draft"}
                   </Button>
@@ -744,7 +778,7 @@ export function PostCard({
             </Dialog>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button size="icon" variant="ghost">
                   <EllipsisVertical className="size-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -758,9 +792,9 @@ export function PostCard({
                       await duplicateGeneration({
                         id: generation.id,
                         user_id: user.id,
-                      })
-                      toast.success("Post duplicated as draft")
-                      window.location.reload()
+                      });
+                      toast.success("Post duplicated as draft");
+                      window.location.reload();
                     }}
                   >
                     <Copy className="mr-2 size-4" /> Duplicate
@@ -774,9 +808,9 @@ export function PostCard({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={async () => {
-                        await deleteGeneration(generation.id)
-                        toast.success("Post deleted")
-                        window.location.reload()
+                        await deleteGeneration(generation.id);
+                        toast.success("Post deleted");
+                        window.location.reload();
                       }}
                     >
                       <Trash2 className="mr-2 size-4" /> Delete
@@ -795,19 +829,19 @@ export function PostCard({
           </div>
         )}
       </CardHeader>
-      <CardContent className="shadow-custom bg-primary mx-4 flex flex-col items-start gap-4 rounded-lg p-2 md:flex-row">
+      <CardContent className="mx-4 flex flex-col items-start gap-4 rounded-lg bg-primary p-2 shadow-custom md:flex-row">
         {generation.image_url ? (
-          <div className="shadow-custom flex max-h-36 max-w-36 items-center justify-center overflow-hidden rounded">
+          <div className="flex max-h-36 max-w-36 items-center justify-center overflow-hidden rounded shadow-custom">
             <Image
-              src={generation.image_url}
               alt="Post image"
-              width={160}
-              height={160}
               className="object-cover"
+              height={160}
+              src={generation.image_url}
+              width={160}
             />
           </div>
         ) : null}
-        <div className="text-foreground flex-1 whitespace-pre-wrap">
+        <div className="flex-1 whitespace-pre-wrap text-foreground">
           {generation.response}
         </div>
       </CardContent>
@@ -823,26 +857,26 @@ export function PostCard({
           {schedule && scheduleStatus === "queue" && (
             <>
               <Button
-                size="sm"
-                variant="outline"
                 onClick={() => {
                   setEditPlatform({
                     platform: platform || "",
                     scheduled_at: scheduledAt || "",
-                  })
-                  setEditDate(scheduledAt ? new Date(scheduledAt) : new Date())
+                  });
+                  setEditDate(scheduledAt ? new Date(scheduledAt) : new Date());
                   setEditTime(
                     scheduledAt ? format(new Date(scheduledAt), "HH:mm") : ""
-                  )
+                  );
                 }}
+                size="sm"
+                variant="outline"
               >
                 Edit {platform} Schedule
               </Button>
               <Button
+                disabled={cancelLoading === platform}
+                onClick={() => handleCancelQueue(platform || "")}
                 size="sm"
                 variant="destructive"
-                onClick={() => handleCancelQueue(platform || "")}
-                disabled={cancelLoading === platform}
               >
                 {cancelLoading === platform
                   ? "Cancelling..."
@@ -852,13 +886,13 @@ export function PostCard({
           )}
           {schedule && scheduleStatus === "failed" && (
             <Button
+              disabled={retryLoading && retryPlatform === platform}
+              onClick={() => {
+                setRetryPlatform(platform || "");
+                handleRetry(platform || "");
+              }}
               size="sm"
               variant="destructive"
-              onClick={() => {
-                setRetryPlatform(platform || "")
-                handleRetry(platform || "")
-              }}
-              disabled={retryLoading && retryPlatform === platform}
             >
               {retryLoading && retryPlatform === platform
                 ? "Retrying..."
@@ -866,30 +900,30 @@ export function PostCard({
             </Button>
           )}
           {/* Acciones para drafts */}
-          {!schedule && !isSent && (
+          {!(schedule || isSent) && (
             <>
               <Button
-                variant="outline"
-                size="sm"
                 disabled={!hasTwitter}
-                title={
-                  !hasTwitter
-                    ? "Connect your Twitter account to enable this action."
-                    : undefined
-                }
                 onClick={() => setScheduleDialogOpen(true)}
+                size="sm"
+                title={
+                  hasTwitter
+                    ? undefined
+                    : "Connect your Twitter account to enable this action."
+                }
+                variant="outline"
               >
                 Add to Queue
               </Button>
               <Button
-                variant="custom"
-                size="sm"
                 onClick={() => {
-                  setPublishModalOpen(true)
-                  setPublishTwitter(false)
-                  setPublishBluesky(false)
-                  setPublishLinkedIn(false)
+                  setPublishModalOpen(true);
+                  setPublishTwitter(false);
+                  setPublishBluesky(false);
+                  setPublishLinkedIn(false);
                 }}
+                size="sm"
+                variant="custom"
               >
                 Publish
               </Button>
@@ -898,48 +932,49 @@ export function PostCard({
         </div>
       </CardFooter>
 
-      <Dialog open={publishModalOpen} onOpenChange={setPublishModalOpen}>
+      <Dialog onOpenChange={setPublishModalOpen} open={publishModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Publish to Social Networks</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="flex items-center gap-2">
               <Checkbox
                 checked={publishTwitter}
-                onCheckedChange={(v) => setPublishTwitter(!!v)}
                 disabled={!hasTwitter || (!!imageUrl && !hasTwitterOAuth1)}
+                onCheckedChange={(v) => setPublishTwitter(!!v)}
               />
               <span>Twitter/X</span>
-              {!hasTwitter ? null : imageUrl ? (
-                hasTwitterOAuth1 ? (
-                  <span className="ml-2 text-xs text-green-600">
-                    ✓ Images supported
-                  </span>
-                ) : (
-                  <span className="ml-2 text-xs text-yellow-600">
-                    (Connect Twitter in Settings for images)
-                  </span>
-                )
-              ) : null}
+              {hasTwitter && imageUrl && hasTwitterOAuth1 && (
+                <span className="ml-2 text-green-600 text-xs">
+                  ✓ Images supported
+                </span>
+              )}
+              {hasTwitter && imageUrl && !hasTwitterOAuth1 && (
+                <span className="ml-2 text-xs text-yellow-600">
+                  (Connect Twitter in Settings for images)
+                </span>
+              )}
             </label>
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="flex items-center gap-2">
               <Checkbox
                 checked={publishBluesky}
-                onCheckedChange={(v) => setPublishBluesky(!!v)}
                 disabled={!hasBluesky}
+                onCheckedChange={(v) => setPublishBluesky(!!v)}
               />
               <span>Bluesky</span>
               {!hasBluesky && (
-                <span className="ml-2 text-xs text-gray-500">
+                <span className="ml-2 text-gray-500 text-xs">
                   Connect your Bluesky account in
                   <Link
+                    className="ml-1 text-airlume underline"
                     href={
                       user?.username
                         ? `/${user.username}/settings`
                         : "/settings"
                     }
-                    className="text-airlume ml-1 underline"
                   >
                     Settings
                   </Link>{" "}
@@ -947,45 +982,47 @@ export function PostCard({
                 </span>
               )}
             </label>
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="flex items-center gap-2">
               <Checkbox
                 checked={publishLinkedIn}
-                onCheckedChange={(v) => setPublishLinkedIn(!!v)}
                 disabled={!hasLinkedIn}
+                onCheckedChange={(v) => setPublishLinkedIn(!!v)}
               />
               <span>LinkedIn</span>
-              {!hasLinkedIn ? (
-                <span className="ml-2 text-xs text-gray-500">
+              {hasLinkedIn && imageUrl && (
+                <span className="ml-2 text-green-600 text-xs">
+                  ✓ Images supported
+                </span>
+              )}
+              {!hasLinkedIn && (
+                <span className="ml-2 text-gray-500 text-xs">
                   Connect your LinkedIn account in Account settings to enable
                   this option.
                 </span>
-              ) : imageUrl ? (
-                <span className="ml-2 text-xs text-green-600">
-                  ✓ Images supported
-                </span>
-              ) : null}
+              )}
             </label>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline" disabled={publishing}>
+              <Button disabled={publishing} variant="outline">
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              variant="custom"
-              onClick={handleMultiPublish}
               disabled={
                 publishing ||
-                (!publishTwitter && !publishBluesky && !publishLinkedIn)
+                !(publishTwitter || publishBluesky || publishLinkedIn)
               }
+              onClick={handleMultiPublish}
+              variant="custom"
             >
               {publishing ? "Publishing..." : "Publish"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={blueskyDialogOpen} onOpenChange={setBlueskyDialogOpen}>
+      <Dialog onOpenChange={setBlueskyDialogOpen} open={blueskyDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Connect to Bluesky</DialogTitle>
@@ -993,10 +1030,10 @@ export function PostCard({
           <div className="flex flex-col gap-4">
             {hasBluesky ? (
               <div className="space-y-2">
-                <div className="text-airlume font-medium">
+                <div className="font-medium text-airlume">
                   Connected to Bluesky as <b>@{blueskyHandle}</b>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-gray-500 text-xs">
                   Your credentials are securely stored. You can update or remove
                   them in Settings.
                 </div>
@@ -1004,64 +1041,66 @@ export function PostCard({
             ) : (
               <>
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="mb-1 flex items-center gap-1 font-medium">
                     Handle
                     <span
                       className="inline-block"
-                      aria-label="Your Bluesky username (handle)"
+                      title="Your Bluesky username (handle)"
                     >
                       <Info className="size-4" />
                     </span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400">
                       @
                     </span>
                     <input
-                      type="text"
-                      className="w-full rounded border p-2 pl-8"
-                      placeholder="handle"
-                      value={blueskyHandle}
-                      onChange={(e) => setBlueskyHandle(e.target.value)}
                       autoComplete="username"
+                      className="w-full rounded border p-2 pl-8"
                       disabled={loadingBluesky}
+                      onChange={(e) => setBlueskyHandle(e.target.value)}
+                      placeholder="handle"
+                      type="text"
+                      value={blueskyHandle}
                     />
                   </div>
-                  <div className="mt-1 text-xs text-gray-500">
+                  <div className="mt-1 text-gray-500 text-xs">
                     For example: yourname.bsky.social
                   </div>
                 </div>
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="mb-1 block font-medium">
                     Bluesky App Password
                   </label>
-                  <div className="mb-2 text-xs text-gray-500">
+                  <div className="mb-2 text-gray-500 text-xs">
                     Use an app password to connect safely. This is <b>not</b>{" "}
                     your account password.{" "}
                     <a
-                      href="https://bsky.app/settings/app-passwords"
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="text-blue-600 underline"
+                      href="https://bsky.app/settings/app-passwords"
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
                       Generate app password in Bluesky
                     </a>
                   </div>
                   <div className="relative">
                     <input
-                      type={showPassword ? "text" : "password"}
-                      className="w-full rounded border p-2 pr-10"
-                      placeholder="xxxx-xxxx-xxxx-xxxx"
-                      value={blueskyPassword}
-                      onChange={(e) => setBlueskyPassword(e.target.value)}
                       autoComplete="current-password"
+                      className="w-full rounded border p-2 pr-10"
                       disabled={loadingBluesky}
+                      onChange={(e) => setBlueskyPassword(e.target.value)}
+                      placeholder="xxxx-xxxx-xxxx-xxxx"
+                      type={showPassword ? "text" : "password"}
+                      value={blueskyPassword}
                     />
                     <button
-                      type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
+                      className="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400"
                       onClick={() => setShowPassword((v) => !v)}
                       tabIndex={-1}
+                      type="button"
                     >
                       {showPassword ? (
                         <EyeOff className="size-5" />
@@ -1075,15 +1114,16 @@ export function PostCard({
             )}
             {imageUrl && (
               <div>
+                {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                 <label className="mb-1 block font-medium">
                   Image Alt Text (optional)
                 </label>
                 <input
-                  type="text"
                   className="w-full rounded border p-2"
-                  placeholder="Description of the image for accessibility"
-                  value={imageAlt}
                   onChange={(e) => setImageAlt(e.target.value)}
+                  placeholder="Description of the image for accessibility"
+                  type="text"
+                  value={imageAlt}
                 />
               </div>
             )}
@@ -1091,37 +1131,38 @@ export function PostCard({
           <DialogFooter>
             <DialogClose asChild>
               <Button
-                variant="outline"
                 disabled={publishingBluesky || loadingBluesky}
+                variant="outline"
               >
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              variant="custom"
-              onClick={handlePublishBluesky}
               disabled={
                 publishingBluesky ||
-                (!hasBluesky && (!blueskyHandle || !blueskyPassword)) ||
+                !(hasBluesky || (blueskyHandle && blueskyPassword)) ||
                 loadingBluesky
               }
+              onClick={handlePublishBluesky}
+              variant="custom"
             >
-              {publishingBluesky
-                ? "Publishing..."
-                : !hasBluesky
-                  ? "Save Credentials and Publish"
-                  : "Publish to Bluesky"}
+              {publishingBluesky && "Publishing..."}
+              {!publishingBluesky && hasBluesky && "Publish to Bluesky"}
+              {!(publishingBluesky || hasBluesky) &&
+                "Save Credentials and Publish"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+      <Dialog onOpenChange={setScheduleDialogOpen} open={scheduleDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Schedule Post</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="font-medium">Select platforms to schedule:</label>
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="flex items-center gap-2">
               <Checkbox
                 checked={scheduleTwitter}
@@ -1132,43 +1173,46 @@ export function PostCard({
             {scheduleTwitter && (
               <div className="ml-4 flex items-end gap-4">
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="font-medium">Date (Twitter):</label>
                   <Calendar
-                    mode="single"
-                    selected={scheduledDateTwitter}
-                    onSelect={setScheduledDateTwitter}
-                    fromDate={new Date()}
                     className="rounded-md border"
+                    fromDate={new Date()}
+                    mode="single"
+                    onSelect={setScheduledDateTwitter}
+                    selected={scheduledDateTwitter}
                   />
                 </div>
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="font-medium">Time (Twitter):</label>
                   <Input
+                    className="w-32"
+                    onChange={(e) => setScheduledTimeTwitter(e.target.value)}
                     type="time"
                     value={scheduledTimeTwitter}
-                    onChange={(e) => setScheduledTimeTwitter(e.target.value)}
-                    className="w-32"
                   />
                 </div>
               </div>
             )}
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="flex items-center gap-2">
               <Checkbox
                 checked={scheduleBluesky}
-                onCheckedChange={(v) => setScheduleBluesky(!!v)}
                 disabled={!hasBluesky}
+                onCheckedChange={(v) => setScheduleBluesky(!!v)}
               />
               <span>Bluesky</span>
               {!hasBluesky && (
-                <span className="ml-2 text-xs text-gray-500">
+                <span className="ml-2 text-gray-500 text-xs">
                   Connect your Bluesky account in
                   <Link
+                    className="ml-1 text-airlume underline"
                     href={
                       user?.username
                         ? `/${user.username}/settings`
                         : "/settings"
                     }
-                    className="text-airlume ml-1 underline"
                   >
                     Settings
                   </Link>{" "}
@@ -1179,35 +1223,38 @@ export function PostCard({
             {scheduleBluesky && (
               <div className="ml-4 flex items-end gap-4">
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="font-medium">Date (Bluesky):</label>
                   <Calendar
-                    mode="single"
-                    selected={scheduledDateBluesky}
-                    onSelect={setScheduledDateBluesky}
-                    fromDate={new Date()}
                     className="rounded-md border"
+                    fromDate={new Date()}
+                    mode="single"
+                    onSelect={setScheduledDateBluesky}
+                    selected={scheduledDateBluesky}
                   />
                 </div>
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="font-medium">Time (Bluesky):</label>
                   <Input
+                    className="w-32"
+                    onChange={(e) => setScheduledTimeBluesky(e.target.value)}
                     type="time"
                     value={scheduledTimeBluesky}
-                    onChange={(e) => setScheduledTimeBluesky(e.target.value)}
-                    className="w-32"
                   />
                 </div>
               </div>
             )}
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="flex items-center gap-2">
               <Checkbox
                 checked={scheduleLinkedIn}
-                onCheckedChange={(v) => setScheduleLinkedIn(!!v)}
                 disabled={!hasLinkedIn}
+                onCheckedChange={(v) => setScheduleLinkedIn(!!v)}
               />
               <span>LinkedIn</span>
               {!hasLinkedIn && (
-                <span className="ml-2 text-xs text-gray-500">
+                <span className="ml-2 text-gray-500 text-xs">
                   Connect your LinkedIn account in Account settings to enable
                   this option.
                 </span>
@@ -1216,22 +1263,24 @@ export function PostCard({
             {scheduleLinkedIn && (
               <div className="ml-4 flex items-end gap-4">
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="font-medium">Date (LinkedIn):</label>
                   <Calendar
-                    mode="single"
-                    selected={scheduledDateLinkedIn}
-                    onSelect={setScheduledDateLinkedIn}
-                    fromDate={new Date()}
                     className="rounded-md border"
+                    fromDate={new Date()}
+                    mode="single"
+                    onSelect={setScheduledDateLinkedIn}
+                    selected={scheduledDateLinkedIn}
                   />
                 </div>
                 <div>
+                  {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
                   <label className="font-medium">Time (LinkedIn):</label>
                   <Input
+                    className="w-32"
+                    onChange={(e) => setScheduledTimeLinkedIn(e.target.value)}
                     type="time"
                     value={scheduledTimeLinkedIn}
-                    onChange={(e) => setScheduledTimeLinkedIn(e.target.value)}
-                    className="w-32"
                   />
                 </div>
               </div>
@@ -1239,23 +1288,23 @@ export function PostCard({
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline" disabled={scheduling}>
+              <Button disabled={scheduling} variant="outline">
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              variant="custom"
-              onClick={handleScheduleMulti}
               disabled={
                 scheduling ||
-                (!scheduleTwitter && !scheduleBluesky && !scheduleLinkedIn) ||
+                !(scheduleTwitter || scheduleBluesky || scheduleLinkedIn) ||
                 (scheduleTwitter &&
-                  (!scheduledDateTwitter || !scheduledTimeTwitter)) ||
+                  !(scheduledDateTwitter && scheduledTimeTwitter)) ||
                 (scheduleBluesky &&
-                  (!scheduledDateBluesky || !scheduledTimeBluesky)) ||
+                  !(scheduledDateBluesky && scheduledTimeBluesky)) ||
                 (scheduleLinkedIn &&
-                  (!scheduledDateLinkedIn || !scheduledTimeLinkedIn))
+                  !(scheduledDateLinkedIn && scheduledTimeLinkedIn))
               }
+              onClick={handleScheduleMulti}
+              variant="custom"
             >
               {scheduling ? "Scheduling..." : "Add to Queue"}
             </Button>
@@ -1263,38 +1312,40 @@ export function PostCard({
         </DialogContent>
       </Dialog>
       {/* Modal para editar schedule */}
-      <Dialog open={!!editPlatform} onOpenChange={() => setEditPlatform(null)}>
+      <Dialog onOpenChange={() => setEditPlatform(null)} open={!!editPlatform}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit {editPlatform?.platform} Schedule</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="font-medium">Date:</label>
             <Calendar
-              mode="single"
-              selected={editDate}
-              onSelect={setEditDate}
-              fromDate={new Date()}
               className="rounded-md border"
+              fromDate={new Date()}
+              mode="single"
+              onSelect={setEditDate}
+              selected={editDate}
             />
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: custom form controls */}
             <label className="font-medium">Time:</label>
             <Input
+              className="w-32"
+              onChange={(e) => setEditTime(e.target.value)}
               type="time"
               value={editTime}
-              onChange={(e) => setEditTime(e.target.value)}
-              className="w-32"
             />
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline" disabled={editLoading}>
+              <Button disabled={editLoading} variant="outline">
                 Cancel
               </Button>
             </DialogClose>
             <Button
-              variant="custom"
-              onClick={handleEditSchedule}
               disabled={editLoading || !editDate || !editTime}
+              onClick={handleEditSchedule}
+              variant="custom"
             >
               {editLoading ? "Saving..." : "Save"}
             </Button>
@@ -1303,8 +1354,8 @@ export function PostCard({
       </Dialog>
       {/* Mostrar error si failed */}
       {schedule && scheduleStatus === "failed" && errorMessage && (
-        <div className="px-4 pb-2 text-xs text-red-500">{errorMessage}</div>
+        <div className="px-4 pb-2 text-red-500 text-xs">{errorMessage}</div>
       )}
     </Card>
-  )
+  );
 }

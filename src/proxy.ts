@@ -1,17 +1,25 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher(["/:username(.*)"])
+const isProtectedRoute = createRouteMatcher(["/:username(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const publicRoutes = ["/", "/about", "/contact"];
-  if (publicRoutes.includes(req.nextUrl.pathname)) return;
+  if (publicRoutes.includes(req.nextUrl.pathname)) {
+    return;
+  }
 
   // No proteger /api/twitter/publish
-  if (req.nextUrl.pathname === "/api/twitter/publish") return;
-  if (req.nextUrl.pathname === "/api/bluesky/publish") return;
+  if (req.nextUrl.pathname === "/api/twitter/publish") {
+    return;
+  }
+  if (req.nextUrl.pathname === "/api/bluesky/publish") {
+    return;
+  }
 
-  if (isProtectedRoute(req)) await auth.protect();
-})
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
@@ -20,4 +28,4 @@ export const config = {
     // Always run for API routes
     "/(api|trpc)(.*)",
   ],
-}
+};

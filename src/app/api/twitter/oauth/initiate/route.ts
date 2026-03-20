@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { TwitterApi } from "twitter-api-v2";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
     const apiKey = process.env.TWITTER_API_KEY;
     const apiSecret = process.env.TWITTER_API_SECRET;
 
-    if (!apiKey || !apiSecret) {
+    if (!(apiKey && apiSecret)) {
       return NextResponse.json(
         { error: "Twitter API credentials not configured" },
         { status: 500 }
@@ -56,4 +56,3 @@ export async function GET() {
     );
   }
 }
-

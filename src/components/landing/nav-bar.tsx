@@ -1,74 +1,73 @@
-"use client"
+"use client";
 
-import { useRef } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import {
   SignedIn,
   SignedOut,
   SignInButton,
   SignUpButton,
   useUser,
-} from "@clerk/nextjs"
+} from "@clerk/nextjs";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useRef } from "react";
 
-import { ThemeSwitcher } from "@/components/theme-switcher"
-import { Button } from "@/components/ui/button"
+import { ThemeSwitcher } from "@/components/theme-switcher";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
-import { HomeIcon } from "../icons/home"
-import type { HomeIconHandle } from "../icons/home"
-import Logo from "../logo"
+} from "@/components/ui/dropdown-menu";
+import type { HomeIconHandle } from "../icons/home";
+import { HomeIcon } from "../icons/home";
+import Logo from "../logo";
 
 export default function NavBar() {
-  const { user, isLoaded, isSignedIn } = useUser()
-  const username = user?.username || "dashboard"
+  const { user, isLoaded, isSignedIn } = useUser();
+  const username = user?.username || "dashboard";
 
-  const router = useRouter()
-  const iconRef = useRef<HomeIconHandle | null>(null)
+  const router = useRouter();
+  const iconRef = useRef<HomeIconHandle | null>(null);
 
   if (!isLoaded) {
     return (
-      <div className="text-muted-foreground absolute px-4 py-2 text-sm">
+      <div className="absolute px-4 py-2 text-muted-foreground text-sm">
         Loading...
       </div>
-    )
+    );
   }
 
   const handleDashboardClick = () => {
-    router.push(`/${username}`)
-  }
+    router.push(`/${username}`);
+  };
 
   return (
     <>
       {/* Desktop NavBar */}
-      <header className="shadow-custom bg-background text-foreground fixed top-5 left-1/2 z-50 hidden min-w-4xl -translate-x-1/2 rounded-full md:block">
+      <header className="fixed top-5 left-1/2 z-50 hidden min-w-4xl -translate-x-1/2 rounded-full bg-background text-foreground shadow-custom md:block">
         <div className="flex w-full items-center justify-between gap-10 px-8 py-4">
           <div className="flex items-center gap-3">
             <Logo className="h-8 w-auto" />
           </div>
-          <nav className="text-foreground/70 hidden items-center justify-center gap-10 text-base font-medium md:flex">
+          <nav className="hidden items-center justify-center gap-10 font-medium text-base text-foreground/70 md:flex">
             <Link
+              className="flex min-w-fit items-center justify-center transition hover:text-foreground"
               href="#about"
-              className="hover:text-foreground flex min-w-fit items-center justify-center transition"
             >
               About Us
             </Link>
             <Link
+              className="flex min-w-fit items-center justify-center transition hover:text-foreground"
               href="#features"
-              className="hover:text-foreground flex min-w-fit items-center justify-center transition"
             >
               Features
             </Link>
 
             <Link
+              className="flex min-w-fit items-center justify-center transition hover:text-foreground"
               href="#faq"
-              className="hover:text-foreground flex min-w-fit items-center justify-center transition"
             >
               FAQ
             </Link>
@@ -76,28 +75,26 @@ export default function NavBar() {
 
           <div className="flex items-center gap-2">
             <SignedOut>
-              <SignInButton mode="modal" forceRedirectUrl={`/dashboard`}>
+              <SignInButton forceRedirectUrl={"/dashboard"} mode="modal">
                 <Button variant="custom">Sign in</Button>
               </SignInButton>
-              <SignUpButton mode="modal" forceRedirectUrl={`/dashboard`}>
+              <SignUpButton forceRedirectUrl={"/dashboard"} mode="modal">
                 <Button variant="outline">Sign up</Button>
               </SignUpButton>
             </SignedOut>
             <SignedIn>
               {isLoaded && isSignedIn && user ? (
-                <>
-                  <Button
-                    onClick={handleDashboardClick}
-                    variant="custom"
-                    onMouseEnter={() => iconRef.current?.startAnimation?.()}
-                    onMouseLeave={() => iconRef.current?.stopAnimation?.()}
-                  >
-                    <HomeIcon ref={iconRef} />
-                    Dashboard
-                  </Button>
-                </>
+                <Button
+                  onClick={handleDashboardClick}
+                  onMouseEnter={() => iconRef.current?.startAnimation?.()}
+                  onMouseLeave={() => iconRef.current?.stopAnimation?.()}
+                  variant="custom"
+                >
+                  <HomeIcon ref={iconRef} />
+                  Dashboard
+                </Button>
               ) : (
-                <div className="bg-primary/10 h-8 w-8 animate-pulse rounded-full" />
+                <div className="h-8 w-8 animate-pulse rounded-full bg-primary/10" />
               )}
             </SignedIn>
             <ThemeSwitcher />
@@ -106,7 +103,7 @@ export default function NavBar() {
       </header>
 
       {/* Mobile NavBar */}
-      <header className="shadow-custom bg-background text-foreground fixed top-5 left-1/2 z-50 flex w-[95vw] max-w-2xl -translate-x-1/2 rounded-full md:hidden">
+      <header className="fixed top-5 left-1/2 z-50 flex w-[95vw] max-w-2xl -translate-x-1/2 rounded-full bg-background text-foreground shadow-custom md:hidden">
         <div className="flex w-full items-center justify-between px-4 py-3">
           {/* Logo left */}
           <Logo className="h-8 w-auto" />
@@ -117,22 +114,24 @@ export default function NavBar() {
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label="Open menu"
-                  className="hover:bg-accent focus:ring-ring rounded-full p-2 focus:ring-2 focus:outline-none"
+                  className="rounded-full p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                  type="button"
                 >
                   {/* Hamburger icon (SVG) */}
                   <svg
-                    width="24"
-                    height="24"
+                    className="block"
                     fill="none"
+                    height="24"
                     stroke="currentColor"
-                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="block"
+                    strokeWidth="2"
+                    width="24"
                   >
-                    <line x1="4" y1="6" x2="20" y2="6" />
-                    <line x1="4" y1="12" x2="20" y2="12" />
-                    <line x1="4" y1="18" x2="20" y2="18" />
+                    <title>Menu</title>
+                    <line x1="4" x2="20" y1="6" y2="6" />
+                    <line x1="4" x2="20" y1="12" y2="12" />
+                    <line x1="4" x2="20" y1="18" y2="18" />
                   </svg>
                 </button>
               </DropdownMenuTrigger>
@@ -149,12 +148,12 @@ export default function NavBar() {
                 <DropdownMenuSeparator />
                 <SignedOut>
                   <DropdownMenuItem asChild>
-                    <SignInButton mode="modal" forceRedirectUrl={`/dashboard`}>
+                    <SignInButton forceRedirectUrl={"/dashboard"} mode="modal">
                       <span>Sign in</span>
                     </SignInButton>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <SignUpButton mode="modal" forceRedirectUrl={`/dashboard`}>
+                    <SignUpButton forceRedirectUrl={"/dashboard"} mode="modal">
                       <span>Sign up</span>
                     </SignUpButton>
                   </DropdownMenuItem>
@@ -166,7 +165,7 @@ export default function NavBar() {
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem disabled>
-                      <div className="bg-primary/10 h-6 w-6 animate-pulse rounded-full" />
+                      <div className="h-6 w-6 animate-pulse rounded-full bg-primary/10" />
                     </DropdownMenuItem>
                   )}
                 </SignedIn>
@@ -176,5 +175,5 @@ export default function NavBar() {
         </div>
       </header>
     </>
-  )
+  );
 }

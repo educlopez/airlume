@@ -1,24 +1,24 @@
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
 
-import "./globals.css"
+import "./globals.css";
 
-import { ClerkProvider } from "@clerk/nextjs"
-import { ThemeProvider } from "next-themes"
+import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeProvider } from "next-themes";
 
-import { baseUrl } from "./sitemap"
+import { baseUrl } from "./sitemap";
 
 const geistSans = Geist({
   variable: "--font-sans",
   subsets: ["latin"],
-})
+});
 
 const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-})
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -38,12 +38,12 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `/opengraph-image.jpg`,
+        url: "/opengraph-image.jpg",
         width: 800,
         height: 600,
       },
       {
-        url: `/opengraph-image.jpg`,
+        url: "/opengraph-image.jpg",
         width: 1800,
         height: 1600,
       },
@@ -55,12 +55,12 @@ export const metadata: Metadata = {
       "Airlume is a modern tool to generate social media posts using smart presets, reusable prompts, and a streamlined interface.",
     images: [
       {
-        url: `/opengraph-image.jpg`,
+        url: "/opengraph-image.jpg",
         width: 800,
         height: 600,
       },
       {
-        url: `/opengraph-image.jpg`,
+        url: "/opengraph-image.jpg",
         width: 1800,
         height: 1600,
       },
@@ -77,12 +77,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <ClerkProvider>
@@ -90,10 +90,10 @@ export default function RootLayout({
         <head>
           {process.env.NODE_ENV === "production" && (
             <script
+              data-website-id="79cc1f27-28ad-42b8-b452-efb8858a0730"
               defer
               src="https://cloud.umami.is/script.js"
-              data-website-id="79cc1f27-28ad-42b8-b452-efb8858a0730"
-            ></script>
+            />
           )}
         </head>
         <body
@@ -102,8 +102,8 @@ export default function RootLayout({
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
-            enableSystem
             disableTransitionOnChange
+            enableSystem
           >
             {children}
           </ThemeProvider>
@@ -111,5 +111,5 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
-  )
+  );
 }

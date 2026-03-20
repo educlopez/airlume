@@ -1,17 +1,20 @@
 import { auth } from "@clerk/nextjs/server";
+import crypto from "crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { TwitterApi } from "twitter-api-v2";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import crypto from "crypto";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const ALGO = "aes-256-gcm";
 const IV_LENGTH = 12;
 const KEY = process.env.TWITTER_ENCRYPTION_KEY;
 
-if (!KEY) throw new Error("TWITTER_ENCRYPTION_KEY is not set");
-if (KEY.length !== 32)
+if (!KEY) {
+  throw new Error("TWITTER_ENCRYPTION_KEY is not set");
+}
+if (KEY.length !== 32) {
   throw new Error("TWITTER_ENCRYPTION_KEY must be 32 chars");
+}
 
 function encrypt(text: string): string {
   const iv = crypto.randomBytes(IV_LENGTH);
@@ -35,7 +38,7 @@ export async function GET(req: NextRequest) {
     const oauthToken = searchParams.get("oauth_token");
     const oauthVerifier = searchParams.get("oauth_verifier");
 
-    if (!oauthToken || !oauthVerifier) {
+    if (!(oauthToken && oauthVerifier)) {
       return NextResponse.redirect(
         new URL("/?error=missing_oauth_params", req.url)
       );
@@ -60,7 +63,7 @@ export async function GET(req: NextRequest) {
     const apiKey = process.env.TWITTER_API_KEY;
     const apiSecret = process.env.TWITTER_API_SECRET;
 
-    if (!apiKey || !apiSecret) {
+    if (!(apiKey && apiSecret)) {
       return NextResponse.redirect(
         new URL("/?error=missing_twitter_credentials", req.url)
       );
@@ -75,7 +78,11 @@ export async function GET(req: NextRequest) {
 
     try {
       // Exchange for access tokens
-      const { client: loggedClient, accessToken, accessSecret } = await client.login(oauthVerifier);
+      const {
+        client: loggedClient,
+        accessToken,
+        accessSecret,
+      } = await client.login(oauthVerifier);
 
       // Get user info
       const user = await loggedClient.v2.me();
@@ -87,15 +94,18 @@ export async function GET(req: NextRequest) {
       // Store in database
       const { error: insertError } = await supabaseAdmin
         .from("twitter_tokens")
-        .upsert({
-          user_id: userId,
-          oauth_token: encryptedToken,
-          oauth_token_secret: encryptedSecret,
-          twitter_user_id: user.data.id,
-          screen_name: user.data.username,
-        }, {
-          onConflict: "user_id",
-        });
+        .upsert(
+          {
+            user_id: userId,
+            oauth_token: encryptedToken,
+            oauth_token_secret: encryptedSecret,
+            twitter_user_id: user.data.id,
+            screen_name: user.data.username,
+          },
+          {
+            onConflict: "user_id",
+          }
+        );
 
       if (insertError) {
         console.error("Failed to store Twitter tokens:", insertError);
@@ -123,4 +133,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/?error=oauth_error", req.url));
   }
 }
-

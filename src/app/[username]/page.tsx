@@ -1,98 +1,123 @@
-import React, { Suspense } from "react"
-import type { Metadata } from "next"
-import Image from "next/image"
-import Link from "next/link"
-import { currentUser } from "@clerk/nextjs/server"
-import { format, isAfter, parseISO } from "date-fns"
-
-import { createServerSupabaseClient } from "@/lib/supabaseClient"
-import { DashboardGreeting } from "@/components/dashboard-greeting"
-import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient"
-import { NotImageFound } from "@/components/icons/no-image-found"
-import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts"
-import { SocialConnectionsCard } from "@/components/social-connections-card"
-import BlueskyPromoImage from "@/components/ui/BlueskyPromoImage"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { currentUser } from "@clerk/nextjs/server";
+import { format, isAfter, parseISO } from "date-fns";
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { Suspense } from "react";
+import { DashboardGreeting } from "@/components/dashboard-greeting";
+import { DashboardHeaderGradient } from "@/components/dashboard-header-gradient";
+import { NotImageFound } from "@/components/icons/no-image-found";
+import { NoScheduledPosts } from "@/components/icons/no-scheduled-posts";
+import { SocialConnectionsCard } from "@/components/social-connections-card";
+import BlueskyPromoImage from "@/components/ui/bluesky-promo-image";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { createServerSupabaseClient } from "@/lib/supabase-client";
 
 export const metadata: Metadata = {
   title: "Dashboard",
-}
+};
 
 // Generate static params for build-time validation (required by Cache Components)
 // This route is dynamic, but we provide a dummy entry for build validation
 export function generateStaticParams() {
-  return [{ username: "dummy" }]
+  return [{ username: "dummy" }];
 }
 
 // Types for scheduled post rows
 // Local type for gallery files
-type GalleryFile = {
-  name: string
-  updated_at?: string | null
+interface GalleryFile {
+  name: string;
+  updated_at?: string | null;
 }
 
 interface Generation {
-  id: string
-  response?: string
+  id: string;
+  response?: string;
 }
 
 interface ScheduledRow {
-  id: string
-  scheduled_at: string
-  status: string
-  generation: Generation | Generation[]
+  generation: Generation | Generation[];
+  id: string;
+  scheduled_at: string;
+  status: string;
 }
 
-// Extracted async component for data fetching (wrapped in Suspense)
-async function DashboardContent() {
-  // Get Clerk user
-  const user = await currentUser()
-  if (!user) {
-    return <div className="p-6">Please sign in to view your dashboard.</div>
+function getActivityMessage(
+  publishedCount: number | null,
+  draftCountRecent: number | null,
+  imageCount: number | null
+): string {
+  if (Number(publishedCount) > 0) {
+    return `Just published ${publishedCount} post${Number(publishedCount) > 1 ? "s" : ""}! 🚀`;
   }
-  const userId = user.id
+  if (Number(draftCountRecent) > 0) {
+    return `Working on ${draftCountRecent} draft${Number(draftCountRecent) > 1 ? "s" : ""}... ✍️`;
+  }
+  if (Number(imageCount) > 0) {
+    return `Uploaded ${imageCount} image${Number(imageCount) > 1 ? "s" : ""} to the gallery! 🖼️`;
+  }
+  return "Start creating to see your activity here!";
+}
 
-  // Twitter connection (Clerk external accounts)
-  const isTwitterConnected = !!user.externalAccounts?.some(
+function checkTwitterConnection(
+  externalAccounts: { provider: string }[] | undefined
+): boolean {
+  return !!externalAccounts?.some(
     (acc) =>
       acc.provider === "oauth_twitter" ||
       acc.provider === "twitter" ||
       acc.provider === "x" ||
       acc.provider?.includes("twitter") ||
       acc.provider?.includes("x")
-  )
+  );
+}
 
-  // LinkedIn connection (Clerk external accounts)
-  const isLinkedInConnected = !!user.externalAccounts?.some(
+function checkLinkedInConnection(
+  externalAccounts: { provider: string }[] | undefined
+): boolean {
+  return !!externalAccounts?.some(
     (acc) =>
       acc.provider === "oauth_linkedin" ||
       acc.provider === "linkedin" ||
       acc.provider === "oauth_linkedin_oidc" ||
       acc.provider?.toLowerCase().includes("linkedin")
-  )
+  );
+}
+
+// Extracted async component for data fetching (wrapped in Suspense)
+async function DashboardContent() {
+  // Get Clerk user
+  const user = await currentUser();
+  if (!user) {
+    return <div className="p-6">Please sign in to view your dashboard.</div>;
+  }
+  const userId = user.id;
+
+  const isTwitterConnected = checkTwitterConnection(user.externalAccounts);
+  const isLinkedInConnected = checkLinkedInConnection(user.externalAccounts);
 
   // Supabase client
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient();
 
   // Draft count
   const { count: draftCount, error: draftError } = await supabase
     .from("generations")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("status", "draft")
+    .eq("status", "draft");
 
   // Bluesky connection: check user_bluesky_accounts table for user_id
-  let isBlueskyConnected = false
+  let isBlueskyConnected = false;
   try {
     const { data: blueskyAccount } = await supabase
       .from("user_bluesky_accounts")
       .select("id")
       .eq("user_id", userId)
-      .single()
-    isBlueskyConnected = !!blueskyAccount
+      .single();
+    isBlueskyConnected = !!blueskyAccount;
   } catch {
-    isBlueskyConnected = false
+    isBlueskyConnected = false;
   }
 
   // 1. Next scheduled post (generations_platforms with status 'queue' and scheduled_at in the future)
@@ -101,33 +126,33 @@ async function DashboardContent() {
     .select("id, scheduled_at, status, generation:generations(id, response)")
     .eq("status", "queue")
     .order("scheduled_at", { ascending: true })
-    .limit(10)
-  const now = new Date()
+    .limit(10);
+  const now = new Date();
   const nextScheduled = scheduledRows
     ? (scheduledRows as ScheduledRow[]).find(
         (row) => row.scheduled_at && isAfter(parseISO(row.scheduled_at), now)
       )
-    : null
+    : null;
 
   // 2. Gallery: get 3 most recent images from storage
   const { data: galleryFiles } = await supabase.storage
     .from("images")
-    .list(userId + "/", { limit: 10 })
+    .list(`${userId}/`, { limit: 10 });
   const galleryImages = (galleryFiles ?? [])
     .filter((f: GalleryFile) => f.name)
     .sort((a: GalleryFile, b: GalleryFile) => {
-      const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0
-      const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0
-      return bTime - aTime
+      const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+      const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+      return bTime - aTime;
     })
     .slice(0, 3)
     .map(
       (f: GalleryFile) =>
         `https://kdwolwebviyzyjulmzgb.supabase.co/storage/v1/object/public/images/${userId}/${f.name}`
-    )
+    );
 
   // 3. Recent activity (last 7 days)
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const [
     { count: publishedCount = 0 } = {},
     { count: draftCountRecent = 0 } = {},
@@ -152,7 +177,7 @@ async function DashboardContent() {
           f.updated_at && isAfter(new Date(f.updated_at), new Date(weekAgo))
       ).length,
     }),
-  ])
+  ]);
 
   return (
     <div className="space-y-6 p-6">
@@ -165,9 +190,9 @@ async function DashboardContent() {
           </p>
         </div>
         <div className="mt-4 md:mt-0">
-          <Card className="shadow-custom bg-primary/80 flex flex-col items-start gap-2 border-none p-4">
+          <Card className="flex flex-col items-start gap-2 border-none bg-primary/80 p-4 shadow-custom">
             <span className="font-semibold">Drafts</span>
-            <span className="font-mono text-4xl font-bold">
+            <span className="font-bold font-mono text-4xl">
               {draftError ? "-" : draftCount}
             </span>
             <span className="text-muted-foreground text-xs">
@@ -181,27 +206,27 @@ async function DashboardContent() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Social Connections */}
         <SocialConnectionsCard
-          isTwitterConnected={isTwitterConnected}
           isBlueskyConnected={isBlueskyConnected}
           isLinkedInConnected={isLinkedInConnected}
+          isTwitterConnected={isTwitterConnected}
           username={user.username ?? ""}
         />
 
         {/* Next scheduled post card */}
-        <Card className="bg-background shadow-custom flex flex-col justify-start border-none p-6">
+        <Card className="flex flex-col justify-start border-none bg-background p-6 shadow-custom">
           <span className="mb-2 block font-semibold">Next scheduled post</span>
           <div className="flex h-full flex-col items-start justify-between gap-2">
             {nextScheduled ? (
               <>
                 <div className="flex flex-row items-center gap-4">
-                  <div className="shadow-custom bg-primary flex max-w-fit flex-col items-center rounded-md p-4">
-                    <span className="font-mono text-4xl font-bold">
+                  <div className="flex max-w-fit flex-col items-center rounded-md bg-primary p-4 shadow-custom">
+                    <span className="font-bold font-mono text-4xl">
                       {format(parseISO(nextScheduled.scheduled_at), "d")}
                     </span>
-                    <span className="text-muted-foreground font-mono text-xs uppercase">
+                    <span className="font-mono text-muted-foreground text-xs uppercase">
                       {format(parseISO(nextScheduled.scheduled_at), "MMM")}
                     </span>
-                    <span className="text-muted-foreground font-mono text-xs">
+                    <span className="font-mono text-muted-foreground text-xs">
                       {format(parseISO(nextScheduled.scheduled_at), "HH:mm")}
                     </span>
                   </div>
@@ -209,24 +234,24 @@ async function DashboardContent() {
                     {(() => {
                       const gen = Array.isArray(nextScheduled.generation)
                         ? nextScheduled.generation[0]
-                        : nextScheduled.generation
+                        : nextScheduled.generation;
                       return gen?.response
                         ? gen.response.split(" ").slice(0, 12).join(" ") +
                             (gen.response.split(" ").length > 12 ? "..." : "")
-                        : ""
+                        : "";
                     })()}
                   </div>
                 </div>
-                <Button variant="outline" className="w-full" asChild>
+                <Button asChild className="w-full" variant="outline">
                   <Link href={`/${user.username}/posts`}>See all posts</Link>
                 </Button>
               </>
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center">
                 <NoScheduledPosts
-                  primaryColor="var(--color-airlume)"
                   backgroundColor="var(--color-primary)"
                   className="ml-2"
+                  primaryColor="var(--color-airlume)"
                 />
                 <span className="text-muted-foreground text-sm">
                   There are no scheduled posts.
@@ -237,31 +262,31 @@ async function DashboardContent() {
         </Card>
 
         {/* Gallery card */}
-        <Card className="bg-background shadow-custom flex flex-col justify-between border-none p-6">
+        <Card className="flex flex-col justify-between border-none bg-background p-6 shadow-custom">
           <span className="mb-2 block font-semibold">Media Library</span>
           <div className="flex h-full w-full items-center justify-center gap-2">
             {galleryImages.length === 0 && (
               <div className="flex h-full flex-col items-center justify-center">
                 <NotImageFound
-                  primaryColor="var(--color-airlume)"
                   backgroundColor="var(--color-primary)"
                   className="ml-2"
+                  primaryColor="var(--color-airlume)"
                 />
                 <span className="text-muted-foreground text-sm">No images</span>
               </div>
             )}
             <div className="grid grid-cols-3 gap-2">
-              {galleryImages.map((src, i) => (
+              {galleryImages.map((src) => (
                 <div
-                  key={i}
                   className="relative h-full w-full overflow-hidden rounded-md border"
+                  key={src}
                 >
                   <Image
-                    src={src}
                     alt="gallery"
                     className="h-full w-full object-cover"
-                    width={64}
                     height={64}
+                    src={src}
+                    width={64}
                   />
                 </div>
               ))}
@@ -269,7 +294,7 @@ async function DashboardContent() {
           </div>
 
           {galleryImages.length >= 1 && (
-            <Button variant="outline" asChild>
+            <Button asChild variant="outline">
               <Link href={`/${user.username}/media-library`}>
                 See all images
               </Link>
@@ -281,7 +306,7 @@ async function DashboardContent() {
       {/* Promo Bluesky + Recent Activity */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Bluesky promo */}
-        <Card className="bg-background shadow-custom flex flex-col items-center justify-between overflow-hidden border-none p-6 md:flex-row">
+        <Card className="flex flex-col items-center justify-between overflow-hidden border-none bg-background p-6 shadow-custom md:flex-row">
           <div className="flex-1 pr-4">
             <span className="mb-2 block font-semibold">
               Publish your photos in Bluesky!
@@ -294,14 +319,14 @@ async function DashboardContent() {
           <div className="group relative flex-1">
             <div className="-right-20 -bottom-40 transition-all duration-300 group-hover:-bottom-36 md:absolute">
               <BlueskyPromoImage
-                src="https://github.com/educlopez.png"
                 alt="Bluesky avatar user preview"
+                src="https://github.com/educlopez.png"
               />
             </div>
           </div>
         </Card>
         {/* Recent Activity */}
-        <Card className="bg-background shadow-custom flex flex-col justify-between overflow-hidden border-none p-6 md:flex-row md:items-center">
+        <Card className="flex flex-col justify-between overflow-hidden border-none bg-background p-6 shadow-custom md:flex-row md:items-center">
           {/* Left: Activity List */}
           <div className="flex-1 pr-4">
             <span className="mb-2 block font-semibold">Recent Activity</span>
@@ -314,45 +339,43 @@ async function DashboardContent() {
           {/* Right: Animated Post Preview */}
           <div className="flex flex-1 items-center justify-center">
             <Link
+              className="group relative w-full max-w-xs cursor-pointer rounded-lg bg-primary shadow-custom transition-transform duration-300 hover:scale-105"
               href={`/${user.username}/generator`}
-              className="shadow-custom group bg-primary relative w-full max-w-xs cursor-pointer rounded-lg transition-transform duration-300 hover:scale-105"
             >
-              <div className="bg-primary/10 border-primary/20 flex flex-col gap-2 rounded-lg border p-4">
+              <div className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/10 p-4">
                 <div className="flex items-center gap-2">
                   <Image
-                    src={user.imageUrl || "https://github.com/educlopez.png"}
                     alt="User avatar"
-                    width={32}
+                    className="h-10 w-10 rounded border border-primary/30 shadow-custom"
                     height={32}
-                    className="border-primary/30 shadow-custom h-10 w-10 rounded border"
+                    src={user.imageUrl || "https://github.com/educlopez.png"}
+                    width={32}
                   />
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold">
+                    <span className="font-semibold text-sm">
                       {user.username || "user"}
                     </span>
-                    <span className="text-muted-foreground block text-xs">
+                    <span className="block text-muted-foreground text-xs">
                       Just now
                     </span>
                   </div>
                 </div>
                 <div className="text-foreground/90 text-sm">
-                  {Number(publishedCount) > 0
-                    ? `Just published ${publishedCount} post${Number(publishedCount) > 1 ? "s" : ""}! 🚀`
-                    : Number(draftCountRecent) > 0
-                      ? `Working on ${draftCountRecent} draft${Number(draftCountRecent) > 1 ? "s" : ""}... ✍️`
-                      : Number(imageCount) > 0
-                        ? `Uploaded ${imageCount} image${Number(imageCount) > 1 ? "s" : ""} to the gallery! 🖼️`
-                        : "Start creating to see your activity here!"}
+                  {getActivityMessage(
+                    publishedCount,
+                    draftCountRecent,
+                    imageCount
+                  )}
                 </div>
               </div>
               {/* Animated background accent */}
-              <div className="from-primary/20 to-primary/5 pointer-events-none absolute top-0 left-0 -z-10 h-full w-full rounded-lg bg-gradient-to-br opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute top-0 left-0 -z-10 h-full w-full rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
             </Link>
           </div>
         </Card>
       </div>
     </div>
-  )
+  );
 }
 
 // Loading fallback component
@@ -363,13 +386,13 @@ function DashboardLoading() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <div
-            key={i}
             className="h-48 animate-pulse rounded bg-gray-100 dark:bg-gray-800"
+            key={i}
           />
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export default function DashboardHomePage() {
@@ -377,5 +400,5 @@ export default function DashboardHomePage() {
     <Suspense fallback={<DashboardLoading />}>
       <DashboardContent />
     </Suspense>
-  )
+  );
 }

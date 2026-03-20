@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-type NoScheduledPostsProps = {
-  className?: string
-  primaryColor?: string // For airlume
-  backgroundColor?: string // For background
+interface NoScheduledPostsProps {
+  backgroundColor?: string; // For background
+  className?: string;
+  primaryColor?: string; // For airlume
 }
 
 export function NoScheduledPosts({
@@ -13,13 +13,14 @@ export function NoScheduledPosts({
 }: NoScheduledPostsProps) {
   return (
     <svg
-      width="92"
+      className={cn(className)}
+      fill="none"
       height="75"
       viewBox="0 0 92 75"
-      fill="none"
+      width="92"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn(className)}
     >
+      <title>No scheduled posts</title>
       <path
         d="M72 6H20C16.134 6 13 9.13401 13 13V55C13 58.3137 15.6863 61 19 61H73C76.3137 61 79 58.3137 79 55V13C79 9.13401 75.866 6 72 6Z"
         fill={backgroundColor}
@@ -77,8 +78,8 @@ export function NoScheduledPosts({
       <circle
         cx="78"
         cy="55"
-        r="13"
         fill={backgroundColor}
+        r="13"
         stroke={primaryColor}
       />
       <path
@@ -102,5 +103,5 @@ export function NoScheduledPosts({
         strokeLinejoin="round"
       />
     </svg>
-  )
+  );
 }

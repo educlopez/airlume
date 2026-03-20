@@ -1,21 +1,21 @@
-import type { Metadata } from "next"
+import type { Metadata } from "next";
 
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export const metadata: Metadata = {
   title: "Dashboard",
   description: "Coming soon Dashboard meta description",
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <div className="text-medium bg-background selection:bg-airlume/10 selection:text-airlume h-screen w-full antialiased lg:mx-auto">
+    <div className="h-screen w-full bg-background text-medium antialiased selection:bg-airlume/10 selection:text-airlume lg:mx-auto">
       <SidebarProvider
         style={
           {
@@ -37,5 +37,5 @@ export default function RootLayout({
         </SidebarInset>
       </SidebarProvider>
     </div>
-  )
+  );
 }

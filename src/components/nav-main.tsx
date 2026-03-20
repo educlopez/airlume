@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useRef } from "react"
-import Link from "next/link"
+import Link from "next/link";
+import { useRef } from "react";
 
 import {
   SidebarGroup,
@@ -9,21 +9,21 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function NavMain({
   items,
 }: {
   items: {
-    title: string
-    url: string
-    icon: React.ElementType
-  }[]
+    title: string;
+    url: string;
+    icon: React.ElementType;
+  }[];
 }) {
   // Create an array of refs, one for each item
   const iconRefs = useRef<
     (null | { startAnimation?: () => void; stopAnimation?: () => void })[]
-  >([])
+  >([]);
 
   return (
     <SidebarGroup>
@@ -31,22 +31,22 @@ export function NavMain({
         <SidebarMenu>
           {items.map((item, idx) => (
             <SidebarMenuItem
+              className="group"
               key={item.title}
               onMouseEnter={() => iconRefs.current[idx]?.startAnimation?.()}
               onMouseLeave={() => iconRefs.current[idx]?.stopAnimation?.()}
-              className="group"
             >
-              <SidebarMenuButton tooltip={item.title} asChild>
+              <SidebarMenuButton asChild tooltip={item.title}>
                 <Link href={item.url}>
                   {item.icon && (
                     <item.icon
+                      className="h-4 w-4 text-foreground/70"
                       ref={(
                         el: {
-                          startAnimation?: () => void
-                          stopAnimation?: () => void
+                          startAnimation?: () => void;
+                          stopAnimation?: () => void;
                         } | null
                       ) => (iconRefs.current[idx] = el)}
-                      className="text-foreground/70 h-4 w-4"
                     />
                   )}
                   <span>{item.title}</span>
@@ -57,5 +57,5 @@ export function NavMain({
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  )
+  );
 }

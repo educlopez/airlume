@@ -1,11 +1,11 @@
-import { Suspense } from "react"
+import { Suspense } from "react";
 
-import SettingsPageClient from "./SettingsPageClient"
+import SettingsPageClient from "./settings-page-client";
 
 // Generate static params for build-time validation (required by Cache Components)
 // This route is dynamic, but we provide a dummy entry for build validation
 export function generateStaticParams() {
-  return [{ username: "dummy", rest: [] }]
+  return [{ username: "dummy", rest: [] }];
 }
 
 // Server component wrapper to provide generateStaticParams
@@ -14,5 +14,5 @@ export default function SettingsPage() {
     <Suspense fallback={<div className="p-6">Loading settings...</div>}>
       <SettingsPageClient />
     </Suspense>
-  )
+  );
 }
