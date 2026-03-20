@@ -55,3 +55,9 @@ next-env.d.ts
 SUBMISSION.md
 .env
 .env*.local
+
+# node compile cache
+node-compile-cache/
+
+# claude
+CLAUDE.md
