@@ -54,3 +54,4 @@ next-env.d.ts
 
 SUBMISSION.md
 .env
+.env*.local
