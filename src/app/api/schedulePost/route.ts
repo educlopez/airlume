@@ -1,4 +1,4 @@
-import { schedules } from "@trigger.dev/sdk/v3";
+import { schedules } from "@trigger.dev/sdk";
 import { type NextRequest, NextResponse } from "next/server";
 import { scheduledPostTask } from "@/trigger/scheduled-post";
 

@@ -29,7 +29,7 @@
     "@radix-ui/react-toggle-group": "^1.1.9",
     "@radix-ui/react-tooltip": "^1.2.6",
     "@supabase/supabase-js": "^2.49.4",
-    "@trigger.dev/sdk": "^3.3.17",
+    "@trigger.dev/sdk": "4.7.6",
     "@vercel/toolbar": "^0.2.2",
     "ai": "^6.0.116",
     "class-variance-authority": "^0.7.1",
@@ -53,7 +53,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.7",
     "@tailwindcss/postcss": "^4.1.6",
-    "@trigger.dev/build": "^3.3.17",
+    "@trigger.dev/build": "4.7.6",
     "@types/node": "^22.15.17",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
