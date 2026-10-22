@@ -1,4 +1,4 @@
-import { schedules } from "@trigger.dev/sdk/v3";
+import { schedules } from "@trigger.dev/sdk";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 type Platform = "twitter" | "bluesky" | "linkedin";
