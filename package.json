@@ -1,6 +1,7 @@
 {
   "name": "airlume",
   "version": "1.0.0",
+  "packageManager": "pnpm@12.17.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

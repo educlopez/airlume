@@ -1,0 +1,17 @@
+# Supply-chain hardening (see the supply-chain-security skill).
+# Cooldown: skip packages published less than 2 days ago.
+minimumReleaseAge: 2880
+
+# Block transitive deps from git repos or raw tarball URLs.
+blockExoticSubdeps: true
+
+# Only these packages may run install/build scripts.
+allowBuilds:
+  # Telemetry notice only.
+  "@clerk/shared": false
+  # Fallback download; the native binary comes as an optional dependency.
+  "@tailwindcss/oxide": false
+
+# Security overrides: patched versions only, inside the current major.
+overrides:
+  "zod@>=4.0.0 <4.6.6": ">=4.6.6 <5"
