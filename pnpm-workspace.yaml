@@ -1,0 +1,44 @@
+# Supply-chain hardening (see the supply-chain-security skill).
+# Cooldown: skip packages published less than 2 days ago.
+minimumReleaseAge: 2880
+
+# Block transitive deps from git repos or raw tarball URLs.
+blockExoticSubdeps: true
+
+# Only these packages may run install/build scripts.
+allowBuilds:
+  # Telemetry notice only.
+  "@clerk/shared": false
+  # Fallback download; the native binary comes as an optional dependency.
+  "@tailwindcss/oxide": false
+
+# Security overrides: patched versions only, inside the current major.
+overrides:
+  "tar": ">=7.5.21 <8"
+  "socket.io-parser": ">=4.2.7 <5"
+  "ajv@8": ">=8.18.0 <9"
+  "@vercel/microfrontends>ajv": ">=8.18.0 <9"
+  "path-to-regexp@6": ">=6.3.0 <7"
+  "@vercel/microfrontends>path-to-regexp": ">=6.3.0 <7"
+  "protobufjs": ">=7.6.6 <8"
+  "postcss": ">=8.5.23 <9"
+  "source-map-js": ">=1.2.2 <2"
+  "browserslist": ">=4.28.7 <5"
+  "fast-uri": ">=3.1.8 <4"
+  "js-cookie": ">=3.0.6 <4"
+  "js-yaml": ">=4.3.2 <5"
+  "nanoid@3": ">=3.3.18 <4"
+  "@grpc/grpc-js": ">=1.14.5 <2"
+  "@humanfs/node": ">=0.16.8 <0.17.0"
+  "@protobufjs/utf8": ">=1.1.1 <2"
+  "baseline-browser-mapping": ">=2.11.0 <3"
+  "follow-redirects": ">=1.16.0 <2"
+  "ws": ">=8.21.0 <9"
+  "@babel/core": ">=7.29.1 <8"
+  "@ai-sdk/provider-utils": ">=4.0.33 <5"
+  "picomatch@2": ">=2.3.2 <3"
+  "picomatch@4": ">=4.0.4 <5"
+  "brace-expansion@1": ">=1.1.21 <2"
+  "brace-expansion@2": ">=2.1.7 <3"
+  "brace-expansion@5": ">=5.0.12 <6"
+  "zod@>=4.0.0 <4.6.6": ">=4.6.6 <5"
