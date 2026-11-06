@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-export const baseUrl = "https://airlume.vercel.app/";
+export const baseUrl = "https://airlume.educalvolopez.com/";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // Static routes
